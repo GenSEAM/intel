@@ -1,0 +1,5 @@
+(:package @genseam/asl-intel
+ :version "0.1.0"
+ :entry "src/intel.asl"
+ :description "Native code intelligence graph, impact analysis, and ASN S-expression navigator"
+ :dependencies [])
