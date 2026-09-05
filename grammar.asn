@@ -1,0 +1,84 @@
+;; Package Grammar & Exported Symbol Registry (ASN)
+;; @genseam/asl-intel
+(:grammar
+  :package @genseam/asl-intel
+  :version "0.1.0"
+  :tokens-baseline 2
+  :symbols [
+    ;; Core Types (<= 2 tokens)
+    (:sym :name "SymbolKind" :kind :type :tokens 1)
+    (:sym :name "sym-fn" :kind :val :tokens 2)
+    (:sym :name "sym-type" :kind :val :tokens 2)
+    (:sym :name "sym-record" :kind :val :tokens 2)
+    (:sym :name "sym-enum" :kind :val :tokens 2)
+    (:sym :name "sym-method" :kind :val :tokens 2)
+    (:sym :name "sym-class" :kind :val :tokens 2)
+    (:sym :name "sym-interface" :kind :val :tokens 2)
+    (:sym :name "sym-variable" :kind :val :tokens 2)
+    (:sym :name "SymbolDef" :kind :type :tokens 1)
+    (:sym :name "SymbolRef" :kind :type :tokens 1)
+    (:sym :name "FileSymbols" :kind :type :tokens 1)
+    (:sym :name "filter-exported" :kind :fn :tokens 2)
+    (:sym :name "QueryKind" :kind :type :tokens 1)
+    (:sym :name "q-search" :kind :val :tokens 2)
+    (:sym :name "q-callers" :kind :val :tokens 2)
+    (:sym :name "q-callees" :kind :val :tokens 2)
+    (:sym :name "q-impact" :kind :val :tokens 2)
+    (:sym :name "q-affected" :kind :val :tokens 2)
+    (:sym :name "q-context" :kind :val :tokens 2)
+    (:sym :name "ImpactItem" :kind :type :tokens 1)
+    (:sym :name "QueryResult" :kind :type :tokens 1)
+    (:sym :name "EdgeKind" :kind :type :tokens 1)
+    (:sym :name "edge-calls" :kind :val :tokens 2)
+    (:sym :name "edge-defines" :kind :val :tokens 2)
+    (:sym :name "edge-imports" :kind :val :tokens 2)
+    (:sym :name "edge-implements" :kind :val :tokens 2)
+    (:sym :name "edge-subtypes" :kind :val :tokens 2)
+    (:sym :name "GraphNode" :kind :type :tokens 1)
+    (:sym :name "GraphEdge" :kind :type :tokens 1)
+    (:sym :name "SymbolGraph" :kind :type :tokens 1)
+    (:sym :name "graph-create" :kind :fn :tokens 2)
+    (:sym :name "intel-version" :kind :fn :tokens 2)
+    (:sym :name "intel-banner" :kind :fn :tokens 2)
+
+    ;; Extended Operations (> 2 tokens with required :rationale)
+    (:sym :name "kind-to-string" :kind :fn :tokens 3
+          :rationale "Serializes SymbolKind enumeration into canonical lowercase string")
+    (:sym :name "string-to-kind" :kind :fn :tokens 3
+          :rationale "Parses string representation back into strongly typed SymbolKind")
+    (:sym :name "parse-asl-tokens" :kind :fn :tokens 3
+          :rationale "Lightweight character tokenizer extracting S-expression tokens from ASL source")
+    (:sym :name "extract-asl-symbols" :kind :fn :tokens 3
+          :rationale "Extracts top-level function, schema, and enum definitions from ASL files")
+    (:sym :name "extract-generic-symbols" :kind :fn :tokens 3
+          :rationale "Fallback heuristic extractor for non-ASL files using indentation and keywords")
+    (:sym :name "encode-symbol-asn" :kind :fn :tokens 3
+          :rationale "Serializes SymbolDef into compact ASN S-expression node")
+    (:sym :name "encode-edge-asn" :kind :fn :tokens 3
+          :rationale "Serializes GraphEdge relationship into ASN S-expression tuple")
+    (:sym :name "encode-impact-asn" :kind :fn :tokens 3
+          :rationale "Serializes transitive blast-radius impact analysis into ASN notation")
+    (:sym :name "encode-asn-response" :kind :fn :tokens 3
+          :rationale "Renders high-level query response payload into token-compressed ASN format")
+    (:sym :name "format-query-kind" :kind :fn :tokens 3
+          :rationale "Converts QueryKind enum into display string for telemetry and logging")
+    (:sym :name "filter-by-depth" :kind :fn :tokens 3
+          :rationale "Prunes transitive dependency traversal items beyond specified search depth")
+    (:sym :name "make-query-result" :kind :fn :tokens 3
+          :rationale "Constructor initializing typed QueryResult with items and query duration")
+    (:sym :name "edge-kind-to-string" :kind :fn :tokens 4
+          :rationale "Converts EdgeKind relationship variant to standard string label")
+    (:sym :name "graph-add-node" :kind :fn :tokens 3
+          :rationale "Appends symbol vertex node into immutable SymbolGraph structure")
+    (:sym :name "graph-add-edge" :kind :fn :tokens 3
+          :rationale "Appends directional dependency edge between nodes in SymbolGraph")
+    (:sym :name "graph-node-count" :kind :fn :tokens 3
+          :rationale "Computes cardinal number of vertex nodes indexed in the symbol graph")
+    (:sym :name "graph-edge-count" :kind :fn :tokens 3
+          :rationale "Computes total count of dependency edges registered in the symbol graph")
+    (:sym :name "test-intel-version" :kind :fn :tokens 3
+          :rationale "Verification test checking intel engine semver string")
+    (:sym :name "test-intel-banner" :kind :fn :tokens 3
+          :rationale "Verification test checking intel engine banner and brand grounding")
+  ]
+)
