@@ -40,7 +40,7 @@
 
 (df filter-by-depth [(items (List ImpactItem)) (max-d I64)] -> (List ImpactItem)
   (:d "Filter ImpactItem list by maximum reachability depth")
-  (list-filter (lambda [(item ImpactItem)] (<= (.-depth item) max-d)) items))
+  (list-filter (fn [(item ImpactItem)] (<= (.-depth item) max-d)) items))
 
 (df make-query-result [(q Str) (k QueryKind) (items (List ImpactItem))] -> QueryResult
   (:d "Create a QueryResult record")

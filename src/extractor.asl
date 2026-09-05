@@ -95,4 +95,4 @@
 
 (df filter-exported [(fs FileSymbols)] -> (List SymbolDef)
   (:d "Return only symbols marked as exported in FileSymbols")
-  (list-filter (lambda [(s SymbolDef)] (.-exported s)) (.-symbols fs)))
+  (list-filter (fn [(s SymbolDef)] (.-exported s)) (.-symbols fs)))
