@@ -93,6 +93,7 @@ export class SymbolGraph {
 
   indexDirectory(dirPath, { excludes = ["node_modules", ".git", "dist", ".venv", ".tokensave"] } = {}) {
     const fullDir = path.resolve(this.rootPath, dirPath);
+    if (!fs.existsSync(fullDir)) return;
     const files = [];
 
     const walk = (d) => {
