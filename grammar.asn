@@ -80,5 +80,102 @@
           :rationale "Verification test checking intel engine semver string")
     (:sym :name "test-intel-banner" :kind :fn :tokens 3
           :rationale "Verification test checking intel engine banner and brand grounding")
+
+    ;; Preload Module Symbols
+    (:sym :name "PreloadTier" :kind :type :tokens 1)
+    (:sym :name "tier-micro-ast" :kind :val :tokens 3
+          :rationale "Micro-AST tier 3 representation")
+    (:sym :name "tier-meso-symbol" :kind :val :tokens 3
+          :rationale "Meso-Symbol tier 2 representation")
+    (:sym :name "tier-macro-topology" :kind :val :tokens 3
+          :rationale "Macro-Topology tier 1 representation")
+    (:sym :name "SymbolStub" :kind :type :tokens 1)
+    (:sym :name "PreloadedHorizon" :kind :type :tokens 1)
+    (:sym :name "preload-tier-to-string" :kind :fn :tokens 4
+          :rationale "Converts PreloadTier enum to string representation")
+    (:sym :name "estimate-tokens" :kind :fn :tokens 2)
+    (:sym :name "estimate-stub-tokens" :kind :fn :tokens 3
+          :rationale "Estimates token consumption for symbol stub")
+    (:sym :name "stub-create" :kind :fn :tokens 2)
+    (:sym :name "horizon-create" :kind :fn :tokens 2)
+    (:sym :name "horizon-add-stub" :kind :fn :tokens 3
+          :rationale "Appends symbol stub to preloaded horizon with budget check")
+    (:sym :name "intel-preload-graph" :kind :fn :tokens 3
+          :rationale "Hydrates graph horizon up to depth k bounded by token ceiling")
+    (:sym :name "intel-preload" :kind :fn :tokens 2)
+    (:sym :name "format-preload-context" :kind :fn :tokens 3
+          :rationale "Renders preloaded horizon into dense ASN context string")
+
+    ;; Preload Test Symbols
+    (:sym :name "test-stub-token-estimation" :kind :fn :tokens 4
+          :rationale "Tests token estimation on symbol stubs")
+    (:sym :name "test-preload-tier-conversion" :kind :fn :tokens 4
+          :rationale "Tests conversion of preload tier enum to string")
+    (:sym :name "test-horizon-budget-enforcement" :kind :fn :tokens 4
+          :rationale "Tests horizon budget enforcement and truncation")
+    (:sym :name "test-horizon-add-stub-budget" :kind :fn :tokens 5
+          :rationale "Tests adding stubs under token budget constraints")
+    (:sym :name "test-horizon-zero-budget" :kind :fn :tokens 4
+          :rationale "Tests zero budget edge case in horizon")
+    (:sym :name "test-intel-preload-graph-multi-tier" :kind :fn :tokens 6
+          :rationale "Tests multi-tier hydration in graph horizon paging")
+    (:sym :name "test-intel-preload-depth-scoping" :kind :fn :tokens 5
+          :rationale "Tests depth scoping boundary conditions in preload")
+    (:sym :name "test-intel-preload-empty-target" :kind :fn :tokens 5
+          :rationale "Tests empty target string boundary in preload")
+    (:sym :name "test-intel-preload-missing-target" :kind :fn :tokens 5
+          :rationale "Tests missing symbol target lookup in preload")
+    (:sym :name "test-intel-preload-zero-depth" :kind :fn :tokens 5
+          :rationale "Tests zero depth scoping boundary in preload")
+    (:sym :name "test-format-preload-context" :kind :fn :tokens 4
+          :rationale "Tests formatting of preloaded horizon into string context")
+    (:sym :name "run-tests" :kind :fn :tokens 2)
+
+    ;; Health Module Symbols
+    (:sym :name "HealthAnomalyKind" :kind :type :tokens 1)
+    (:sym :name "anomaly-cycle" :kind :val :tokens 2)
+    (:sym :name "anomaly-blast-radius" :kind :val :tokens 3
+          :rationale "Anomaly variant flagging high fan-in blast radius hotspots")
+    (:sym :name "anomaly-orphan-export" :kind :val :tokens 3
+          :rationale "Anomaly variant flagging exported symbols with zero callers")
+    (:sym :name "anomaly-signature-mismatch" :kind :val :tokens 3
+          :rationale "Anomaly variant flagging signature mismatch across calls")
+    (:sym :name "anomaly-complexity-hotspot" :kind :val :tokens 3
+          :rationale "Anomaly variant flagging cyclomatic complexity line span hotspots")
+    (:sym :name "HealthAnomaly" :kind :type :tokens 1)
+    (:sym :name "HealthMatrix" :kind :type :tokens 1)
+    (:sym :name "health-anomaly-kind-to-string" :kind :fn :tokens 5
+          :rationale "Converts HealthAnomalyKind enum to string")
+    (:sym :name "detect-import-cycles" :kind :fn :tokens 3
+          :rationale "Detects circular dependency cycles across module imports")
+    (:sym :name "detect-blast-radius-hotspots" :kind :fn :tokens 3
+          :rationale "Flags symbols with high fan-in in-degree")
+    (:sym :name "detect-orphan-exports" :kind :fn :tokens 3
+          :rationale "Detects exported symbols with zero incoming references")
+    (:sym :name "detect-signature-mismatches" :kind :fn :tokens 3
+          :rationale "Validates signature parameter parity across calls")
+    (:sym :name "detect-cyclomatic-hotspots" :kind :fn :tokens 3
+          :rationale "Flags functions exceeding line span complexity threshold")
+    (:sym :name "build-health-matrix" :kind :fn :tokens 3
+          :rationale "Aggregates structural health checks into unified matrix")
+    (:sym :name "intel-health" :kind :fn :tokens 2)
+    (:sym :name "format-health-report" :kind :fn :tokens 3
+          :rationale "Renders structural health matrix into formatted diagnostic report")
+
+    ;; Health Test Symbols
+    (:sym :name "test-detect-cycles-clean-dag" :kind :fn :tokens 5
+          :rationale "Tests cycle detection on clean acyclic DAG")
+    (:sym :name "test-detect-cycles-diamond-dag" :kind :fn :tokens 5
+          :rationale "Tests cycle detection on diamond DAG topology")
+    (:sym :name "test-detect-self-cycle" :kind :fn :tokens 4
+          :rationale "Tests cycle detection on self-referential import")
+    (:sym :name "test-blast-radius-hotspot" :kind :fn :tokens 4
+          :rationale "Tests detection of high fan-in blast radius hotspots")
+    (:sym :name "test-orphan-exports" :kind :fn :tokens 3
+          :rationale "Tests detection of uncalled exported symbols")
+    (:sym :name "test-cyclomatic-hotspot" :kind :fn :tokens 3
+          :rationale "Tests detection of high complexity line span hotspots")
+    (:sym :name "test-build-health-matrix" :kind :fn :tokens 4
+          :rationale "Tests complete health matrix construction and status")
   ]
 )
