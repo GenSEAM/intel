@@ -54,6 +54,7 @@ export function extractSymbolsFromSource(filepath, source) {
 
 function extractAsl(filepath, lines, symbols, refs) {
   let exportsList = new Set();
+  let currentCaller = "toplevel";
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -67,7 +68,7 @@ function extractAsl(filepath, lines, symbols, refs) {
     }
 
     // Function: (df name [(args)] -> RetType
-    const fnMatch = trimmed.match(/^\((df|dfs|dfe)\s+([a-zA-Z0-9_\-]+)\s*\[(.*?)\]\s*(?:->\s*([a-zA-Z0-9_\-\(\)\s]+))?/);
+    const fnMatch = trimmed.match(/^\((df|dfs|dfe)\s+([a-zA-Z0-9_\-]+)\s*\[(.*?)\](?:\s*->\s*([a-zA-Z0-9_\-]+|\([a-zA-Z0-9_\-\s]+\)))?/);
     if (fnMatch) {
       const isEff = fnMatch[1] === "dfe";
       const isSyn = fnMatch[1] === "dfs";
@@ -84,14 +85,14 @@ function extractAsl(filepath, lines, symbols, refs) {
         exported: exportsList.has(name) || isSyn,
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // Type: (ty Name (record ...)) or (ty Name (enum ...))
     const tyMatch = trimmed.match(/^\(ty\s+([a-zA-Z0-9_\-]+)/);
     if (tyMatch) {
       const name = tyMatch[1];
-      const kind = (lines[i + 1] && lines[i + 1].includes('enum')) ? 'enum' : 'record';
+      const kind = (lines[i + 1] && lines[i + 1].includes("enum")) ? "enum" : "record";
       symbols.push({
         name,
         kind,
@@ -100,19 +101,19 @@ function extractAsl(filepath, lines, symbols, refs) {
         endLine: i + 1,
         signature: `${kind} ${name}`,
         exported: exportsList.has(name),
-        doc: ''
+        doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // Call references: (callee-name ...
     const callMatches = line.matchAll(/\(([a-zA-Z0-9_\-]+)\b/g);
     for (const cm of callMatches) {
       const callee = cm[1];
-      if (!["df", "dfs", "dfe", "ty", "mt", "let", "cond", "if", "list", "record", "enum", ":x", ":d"].includes(callee)) {
+      if (!["df", "dfs", "dfe", "ty", "mt", "let", "cond", "if", "list", "record", "enum", ":x", ":d", "+", "-", "*", "/", "=", "<", ">"].includes(callee)) {
         refs.push({
           name: callee,
-          caller: symbols.length > 0 ? symbols[symbols.length - 1].name : "toplevel",
+          caller: currentCaller,
           file: filepath,
           line: i + 1
         });
@@ -122,6 +123,8 @@ function extractAsl(filepath, lines, symbols, refs) {
 }
 
 function extractTsJs(filepath, lines, symbols, refs) {
+  let currentCaller = "toplevel";
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
@@ -133,8 +136,9 @@ function extractTsJs(filepath, lines, symbols, refs) {
     // function name(...)
     const fnMatch = clean.match(/^(?:async\s+)?function\s+([a-zA-Z0-9_$]+)\s*\((.*?)\)/);
     if (fnMatch) {
+      const name = fnMatch[1];
       symbols.push({
-        name: fnMatch[1],
+        name,
         kind: "fn",
         file: filepath,
         startLine: i + 1,
@@ -143,14 +147,15 @@ function extractTsJs(filepath, lines, symbols, refs) {
         exported: isExport,
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // const/let name = (...) =>
     const arrowMatch = clean.match(/^(?:const|let)\s+([a-zA-Z0-9_$]+)\s*=\s*(?:async\s*)?\((.*?)\)\s*=>/);
     if (arrowMatch) {
+      const name = arrowMatch[1];
       symbols.push({
-        name: arrowMatch[1],
+        name,
         kind: "fn",
         file: filepath,
         startLine: i + 1,
@@ -159,23 +164,24 @@ function extractTsJs(filepath, lines, symbols, refs) {
         exported: isExport,
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // class/interface/type
     const classMatch = clean.match(/^(class|interface|type)\s+([a-zA-Z0-9_$]+)/);
     if (classMatch) {
+      const name = classMatch[2];
       symbols.push({
-        name: classMatch[2],
+        name,
         kind: classMatch[1],
         file: filepath,
         startLine: i + 1,
         endLine: i + 1,
-        signature: `${classMatch[1]} ${classMatch[2]}`,
+        signature: `${classMatch[1]} ${name}`,
         exported: isExport,
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // Function calls
@@ -185,7 +191,7 @@ function extractTsJs(filepath, lines, symbols, refs) {
       if (!["if", "for", "while", "switch", "catch", "function"].includes(callee)) {
         refs.push({
           name: callee,
-          caller: symbols.length > 0 ? symbols[symbols.length - 1].name : "toplevel",
+          caller: currentCaller,
           file: filepath,
           line: i + 1
         });
@@ -195,6 +201,8 @@ function extractTsJs(filepath, lines, symbols, refs) {
 }
 
 function extractPython(filepath, lines, symbols, refs) {
+  let currentCaller = "toplevel";
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
@@ -213,23 +221,24 @@ function extractPython(filepath, lines, symbols, refs) {
         exported: !name.startsWith("_"),
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // class Name:
     const classMatch = trimmed.match(/^class\s+([a-zA-Z0-9_]+)/);
     if (classMatch) {
+      const name = classMatch[1];
       symbols.push({
-        name: classMatch[1],
+        name,
         kind: "class",
         file: filepath,
         startLine: i + 1,
         endLine: i + 1,
-        signature: `class ${classMatch[1]}`,
-        exported: !classMatch[1].startsWith("_"),
+        signature: `class ${name}`,
+        exported: !name.startsWith("_"),
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // Calls: name(...)
@@ -239,7 +248,7 @@ function extractPython(filepath, lines, symbols, refs) {
       if (!["def", "class", "if", "for", "while", "with", "return"].includes(callee)) {
         refs.push({
           name: callee,
-          caller: symbols.length > 0 ? symbols[symbols.length - 1].name : "toplevel",
+          caller: currentCaller,
           file: filepath,
           line: i + 1
         });
@@ -249,6 +258,8 @@ function extractPython(filepath, lines, symbols, refs) {
 }
 
 function extractRust(filepath, lines, symbols, refs) {
+  let currentCaller = "toplevel";
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
@@ -258,8 +269,9 @@ function extractRust(filepath, lines, symbols, refs) {
     // fn name(...)
     const fnMatch = clean.match(/^(?:async\s+)?fn\s+([a-zA-Z0-9_]+)\s*\((.*?)\)/);
     if (fnMatch) {
+      const name = fnMatch[1];
       symbols.push({
-        name: fnMatch[1],
+        name,
         kind: "fn",
         file: filepath,
         startLine: i + 1,
@@ -268,28 +280,31 @@ function extractRust(filepath, lines, symbols, refs) {
         exported: isPub,
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // struct/enum/trait
     const tyMatch = clean.match(/^(struct|enum|trait)\s+([a-zA-Z0-9_]+)/);
     if (tyMatch) {
+      const name = tyMatch[2];
       symbols.push({
-        name: tyMatch[2],
+        name,
         kind: tyMatch[1],
         file: filepath,
         startLine: i + 1,
         endLine: i + 1,
-        signature: `${tyMatch[1]} ${tyMatch[2]}`,
+        signature: `${tyMatch[1]} ${name}`,
         exported: isPub,
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
   }
 }
 
 function extractGo(filepath, lines, symbols, refs) {
+  let currentCaller = "toplevel";
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
@@ -309,7 +324,7 @@ function extractGo(filepath, lines, symbols, refs) {
         exported: isExported,
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
 
     // type Name struct/interface
@@ -327,7 +342,7 @@ function extractGo(filepath, lines, symbols, refs) {
         exported: isExported,
         doc: ""
       });
-      continue;
+      currentCaller = name;
     }
   }
 }
