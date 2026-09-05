@@ -1,9 +1,10 @@
-(:d "Multi-language AST Symbol & Reference Extractor for Code Intelligence"
- :x [SymbolKind
-     sym-fn sym-type sym-record sym-enum sym-method sym-class sym-interface sym-variable
-     SymbolDef SymbolRef FileSymbols
-     kind-to-string string-to-kind
-     parse-asl-tokens extract-asl-symbols extract-generic-symbols filter-exported])
+(module asl-intel/extractor
+  :d "Multi-language AST Symbol & Reference Extractor for Code Intelligence"
+  :x [SymbolKind
+      sym-fn sym-type sym-record sym-enum sym-method sym-class sym-interface sym-variable
+      SymbolDef SymbolRef FileSymbols
+      kind-to-string string-to-kind
+      parse-asl-tokens extract-asl-symbols extract-generic-symbols filter-exported])
 
 (ty SymbolKind
   (enum

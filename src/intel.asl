@@ -1,9 +1,10 @@
-(:d "GenSEAM ASL-Intel Code Intelligence Engine Entrypoint"
- :i [(extractor :a [SymbolKind SymbolDef SymbolRef FileSymbols])
-     (graph :a [EdgeKind GraphNode GraphEdge SymbolGraph])
-     (query :a [QueryKind ImpactItem QueryResult])
-     (codec :a [encode-symbol-asn encode-edge-asn encode-impact-asn encode-asn-response])]
- :x [intel-version intel-banner])
+(module asl-intel/intel
+  :d "GenSEAM ASL-Intel Code Intelligence Engine Entrypoint"
+  :i [(extractor :a [SymbolKind SymbolDef SymbolRef FileSymbols])
+      (graph :a [EdgeKind GraphNode GraphEdge SymbolGraph])
+      (query :a [QueryKind ImpactItem QueryResult])
+      (codec :a [encode-symbol-asn encode-edge-asn encode-impact-asn encode-asn-response])]
+  :x [intel-version intel-banner])
 
 (df intel-version [] -> Str
   (:d "Return the ASL-Intel version string")

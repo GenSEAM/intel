@@ -1,8 +1,9 @@
-(:d "Transitive Reachability & Impact Query Engine for Code Intelligence"
- :x [QueryKind
-     q-search q-callers q-callees q-impact q-affected q-context
-     ImpactItem QueryResult
-     format-query-kind filter-by-depth make-query-result])
+(module asl-intel/query
+  :d "Transitive Reachability & Impact Query Engine for Code Intelligence"
+  :x [QueryKind
+      q-search q-callers q-callees q-impact q-affected q-context
+      ImpactItem QueryResult
+      format-query-kind filter-by-depth make-query-result])
 
 (ty QueryKind
   (enum

@@ -1,10 +1,11 @@
-(:d "High-Performance In-Memory Symbol Knowledge Graph for Code Intelligence"
- :x [EdgeKind
-     edge-calls edge-defines edge-imports edge-implements edge-subtypes
-     GraphNode GraphEdge SymbolGraph
-     edge-kind-to-string
-     graph-create graph-add-node graph-add-edge
-     graph-node-count graph-edge-count])
+(module asl-intel/graph
+  :d "High-Performance In-Memory Symbol Knowledge Graph for Code Intelligence"
+  :x [EdgeKind
+      edge-calls edge-defines edge-imports edge-implements edge-subtypes
+      GraphNode GraphEdge SymbolGraph
+      edge-kind-to-string
+      graph-create graph-add-node graph-add-edge
+      graph-node-count graph-edge-count])
 
 (ty EdgeKind
   (enum

@@ -1,5 +1,6 @@
-(:d "Token-Dense ASN S-Expression Codec for Code Intelligence"
- :x [encode-symbol-asn encode-edge-asn encode-impact-asn encode-asn-response])
+(module asl-intel/codec
+  :d "Token-Dense ASN S-Expression Codec for Code Intelligence"
+  :x [encode-symbol-asn encode-edge-asn encode-impact-asn encode-asn-response])
 
 (df encode-symbol-asn [(name Str)
                        (kind Str)
