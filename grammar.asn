@@ -177,5 +177,32 @@
           :rationale "Tests detection of high complexity line span hotspots")
     (:sym :name "test-build-health-matrix" :kind :fn :tokens 4
           :rationale "Tests complete health matrix construction and status")
+
+    ;; Text & Document Intelligence Symbols
+    (:sym :name "TextSection" :kind :type :tokens 1)
+    (:sym :name "TextDocOutline" :kind :type :tokens 1)
+    (:sym :name "TextMatchSlice" :kind :type :tokens 1)
+    (:sym :name "scan-doc-outline" :kind :fn :tokens 3
+          :rationale "Scans markdown document headers to build structural outline")
+    (:sym :name "extract-doc-section" :kind :fn :tokens 3
+          :rationale "Extracts targeted chapter or section slice without full file read")
+    (:sym :name "search-doc-snippets" :kind :fn :tokens 3
+          :rationale "Searches document text for matching keyword snippets with line numbers")
+    (:sym :name "format-doc-outline-asn" :kind :fn :tokens 4
+          :rationale "Serializes document structural outline into compact ASN S-expression")
+    (:sym :name "format-section-asn" :kind :fn :tokens 3
+          :rationale "Serializes targeted section slice into compact ASN notation")
+
+    ;; Text Scan Test Symbols
+    (:sym :name "test-scan-doc-outline" :kind :fn :tokens 4
+          :rationale "Tests header extraction and line calculation")
+    (:sym :name "test-extract-doc-section" :kind :fn :tokens 4
+          :rationale "Tests selective extraction of targeted markdown chapter")
+    (:sym :name "test-search-doc-snippets" :kind :fn :tokens 4
+          :rationale "Tests keyword snippet search with line numbers")
+    (:sym :name "test-format-doc-outline-asn" :kind :fn :tokens 5
+          :rationale "Tests ASN outline formatting")
+    (:sym :name "test-format-section-asn" :kind :fn :tokens 4
+          :rationale "Tests ASN section slice formatting")
   ]
 )
