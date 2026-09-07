@@ -3,8 +3,16 @@
   :i [(extractor :a [SymbolKind SymbolDef SymbolRef FileSymbols])
       (graph :a [EdgeKind GraphNode GraphEdge SymbolGraph])
       (query :a [QueryKind ImpactItem QueryResult])
-      (codec :a [encode-symbol-asn encode-edge-asn encode-impact-asn encode-asn-response])]
-  :x [intel-version intel-banner])
+      (codec :a [encode-symbol-asn encode-edge-asn encode-impact-asn encode-asn-response])
+      (health :a [intel-health build-health-matrix format-health-report HealthMatrix])
+      (diagram :a [DiagramFormat diagram-format-mermaid diagram-format-asn
+                   diagram-format-to-string
+                   generate-mermaid-diagram generate-asn-diagram generate-diagram
+                   render-mermaid-dag render-asn-dag])]
+  :x [intel-version intel-banner
+      intel-health build-health-matrix format-health-report
+      render-mermaid-dag render-asn-dag
+      generate-mermaid-diagram generate-asn-diagram generate-diagram])
 
 (df intel-version [] -> Str
   (:d "Return the ASL-Intel version string")

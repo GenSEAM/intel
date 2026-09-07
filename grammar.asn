@@ -204,5 +204,45 @@
           :rationale "Tests ASN outline formatting")
     (:sym :name "test-format-section-asn" :kind :fn :tokens 4
           :rationale "Tests ASN section slice formatting")
+
+    ;; Diagram Generation Symbols
+    (:sym :name "DiagramFormat" :kind :type :tokens 1)
+    (:sym :name "diagram-format-mermaid" :kind :val :tokens 3
+          :rationale "Mermaid graph TD diagram format variant")
+    (:sym :name "diagram-format-asn" :kind :val :tokens 3
+          :rationale "ASN S-expression DAG diagram format variant")
+    (:sym :name "diagram-format-to-string" :kind :fn :tokens 4
+          :rationale "Converts DiagramFormat enum to canonical string")
+    (:sym :name "generate-mermaid-diagram" :kind :fn :tokens 3
+          :rationale "Generates Mermaid graph TD dependency diagram")
+    (:sym :name "generate-asn-diagram" :kind :fn :tokens 3
+          :rationale "Generates ASN S-expression dependency DAG")
+    (:sym :name "generate-diagram" :kind :fn :tokens 2)
+    (:sym :name "render-mermaid-dag" :kind :fn :tokens 3
+          :rationale "Renders dependency graph in Mermaid graph TD format")
+    (:sym :name "render-asn-dag" :kind :fn :tokens 3
+          :rationale "Renders dependency graph in ASN S-expression format")
+
+    ;; Diagram Test Symbols
+    (:sym :name "test-diagram-mermaid-format" :kind :fn :tokens 4
+          :rationale "Tests Mermaid format generation and syntax")
+    (:sym :name "test-diagram-asn-format" :kind :fn :tokens 4
+          :rationale "Tests ASN format generation and syntax")
+    (:sym :name "test-diagram-diamond-dag" :kind :fn :tokens 4
+          :rationale "Tests diamond DAG dependency formatting")
+    (:sym :name "test-diagram-empty-graph" :kind :fn :tokens 4
+          :rationale "Tests diagram generation edge cases on empty graph")
+    (:sym :name "test-diagram-format-enum" :kind :fn :tokens 4
+          :rationale "Tests diagram format enum dispatchers and aliases")
+
+    ;; CLI Test Symbols
+    (:sym :name "test-cli-health-matrix-structure" :kind :fn :tokens 5
+          :rationale "Tests health matrix record fields and healthy invariant")
+    (:sym :name "test-cli-orphans-filter" :kind :fn :tokens 4
+          :rationale "Tests dead export anomaly identification and filtering")
+    (:sym :name "test-cli-cycles-3state-dfs" :kind :fn :tokens 5
+          :rationale "Tests 3-state DFS cycle detection across graphs")
+    (:sym :name "test-cli-hotspots-threshold" :kind :fn :tokens 4
+          :rationale "Tests blast radius and cyclomatic span thresholding")
   ]
 )

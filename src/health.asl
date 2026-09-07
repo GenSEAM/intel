@@ -281,7 +281,8 @@
   :d "Formats HealthMatrix into human-readable diagnostic report."
   (let [(status-str (if (.-healthy matrix) "HEALTHY (CLEAN)" "UNHEALTHY (ANOMALIES DETECTED)"))
         (cycle-str (if (.-has-cycles matrix) "BLOCKED (CYCLES DETECTED)" "NONE (CLEAN)"))
-        (header (str "=== CODEBASE STRUCTURAL HEALTH REPORT ===\n"
+        (header (str "=== CODEBASE STRUCTURAL HEALTH MATRIX ===\n"
+                     "=== CODEBASE STRUCTURAL HEALTH REPORT ===\n"
                      "Scope:        " (.-scope matrix) "\n"
                      "Status:       " status-str "\n"
                      "Total Nodes:  " (string-from-int64 (.-total-nodes matrix)) "\n"
