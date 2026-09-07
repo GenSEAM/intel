@@ -1,7 +1,7 @@
 (module asl-intel/health
   :d "Automated Codebase Structural Health Matrix & Invariant Anomaly Detection Engine"
   :x [HealthAnomalyKind
-      anomaly-cycle anomaly-blast-radius anomaly-orphan-export anomaly-signature-mismatch anomaly-complexity-hotspot
+      anomaly-cycle anomaly-blast-radius anomaly-orphan-export anomaly-signature-mismatch anomaly-complexity-hotspot anomaly-layer-leakage
       HealthAnomaly HealthMatrix
       health-anomaly-kind-to-string
       detect-import-cycles
@@ -9,6 +9,9 @@
       detect-orphan-exports
       detect-signature-mismatches
       detect-cyclomatic-hotspots
+      module-to-layer
+      is-agent-id?
+      detect-layer-leakage
       build-health-matrix
       intel-health
       format-health-report]
@@ -19,7 +22,8 @@
   (:c anomaly-blast-radius [] "Blast radius hotspot: high fan-in symbol")
   (:c anomaly-orphan-export [] "Orphan export: exported symbol with zero references")
   (:c anomaly-signature-mismatch [] "Signature mismatch across call edge")
-  (:c anomaly-complexity-hotspot [] "Complexity hotspot: function exceeding complexity threshold"))
+  (:c anomaly-complexity-hotspot [] "Complexity hotspot: function exceeding complexity threshold")
+  (:c anomaly-layer-leakage [] "Boundary violation: illegal cross-layer dependency from lower to higher layer"))
 
 (dfs HealthAnomaly
   (:f kind HealthAnomalyKind "Category of detected health anomaly")
@@ -48,7 +52,8 @@
     ((anomaly-blast-radius) "blast-radius")
     ((anomaly-orphan-export) "orphan-export")
     ((anomaly-signature-mismatch) "signature-mismatch")
-    ((anomaly-complexity-hotspot) "complexity-hotspot")))
+    ((anomaly-complexity-hotspot) "complexity-hotspot")
+    ((anomaly-layer-leakage) "layer-leakage")))
 
 (df find-node-by-key [(nodes (List g/GraphNode)) (key Str)] -> (Option g/GraphNode)
   :d "Finds a node in nodes list by matching id or name against key."
@@ -247,21 +252,120 @@
           (list)
           (.-nodes g))))
 
+(df module-to-layer [(name Str)] -> I64
+  :d "Maps package or module identifier/path to architectural layer tier (0..3)."
+  (let [(n (string-trim name))]
+    (if (or (string-contains? n "asl-bridge")
+            (or (string-contains? n "asl-plugin")
+                (or (string-contains? n "asl-sh")
+                    (or (string-contains? n "asl-cli")
+                        (or (string-contains? n "asl-gates")
+                            (or (string-contains? n "browser-plugin")
+                                (or (string-contains? n "bridges/")
+                                    (string-contains? n "bin/"))))))))
+      3
+      (if (or (string-contains? n "crawler")
+              (or (string-contains? n "web-api-search")
+                  (or (string-contains? n "asl-registry")
+                      (or (string-contains? n "voice")
+                          (or (string-contains? n "asl-mem")
+                              (or (= n "mem")
+                                  (or (string-contains? n "mem/")
+                                      (string-contains? n "/mem/"))))))))
+        2
+        (if (or (string-contains? n "agent-bus")
+                (or (string-contains? n "agent-core")
+                    (or (string-contains? n "harness")
+                        (string-contains? n "asl-contracts"))))
+          1
+          0)))))
+
+(df is-agent-id? [(s Str)] -> Bool
+  :d "Identifies agent identity references e.g. @scout, @coder, @reviewer, @<agent>."
+  (let [(trimmed (string-trim s))]
+    (and (string-starts-with? trimmed "@")
+         (and (> (string-length trimmed) 1)
+              (and (not (string-contains? trimmed "/"))
+                   (not (string-starts-with? trimmed "@wal")))))))
+
+(df detect-layer-leakage [(g g/SymbolGraph)] -> (List HealthAnomaly)
+  :d "Traps illegal cross-layer upward dependencies and agent ID references in Layer 0."
+  (let [(nodes (.-nodes g))
+        (edges (.-edges g))
+        (edge-leaks (fold (fn [(acc (List HealthAnomaly)) (edge g/GraphEdge)] -> (List HealthAnomaly)
+                            (let [(src-node (find-node-by-key nodes (.-src edge)))
+                                  (src-path (mt src-node
+                                              ((some sn) (if (not (string-empty? (.-file sn))) (.-file sn) (.-src edge)))
+                                              ((none) (if (not (string-empty? (.-file edge))) (.-file edge) (.-src edge)))))
+                                  (l-src (module-to-layer src-path))
+                                  (dst-node (find-node-by-key nodes (.-dst edge)))
+                                  (dst-path (mt dst-node
+                                              ((some dn) (if (not (string-empty? (.-file dn))) (.-file dn) (.-dst edge)))
+                                              ((none) (.-dst edge))))
+                                  (l-dst (module-to-layer dst-path))
+                                  (loc (str (.-file edge) ":" (string-from-int64 (.-line edge))))]
+                              (if (and (= l-src 0) (is-agent-id? (.-dst edge)))
+                                (let [(anom (HealthAnomaly
+                                              :kind (anomaly-layer-leakage)
+                                              :symbol (.-src edge)
+                                              :location loc
+                                              :message (str "LAYER_LEAKAGE: Layer 0 component references forbidden agent ID '" (.-dst edge) "'")
+                                              :severity "blocker"
+                                              :metric 1))]
+                                  (list-append acc (list anom)))
+                                (if (< l-src l-dst)
+                                  (let [(anom (HealthAnomaly
+                                                :kind (anomaly-layer-leakage)
+                                                :symbol (.-src edge)
+                                                :location loc
+                                                :message (str "LAYER_LEAKAGE: Illegal upward dependency from Layer "
+                                                              (string-from-int64 l-src) " ('" (.-src edge)
+                                                              "') to Layer " (string-from-int64 l-dst)
+                                                              " ('" (.-dst edge) "')")
+                                                :severity "blocker"
+                                                :metric (- l-dst l-src)))]
+                                    (list-append acc (list anom)))
+                                  acc))))
+                          (list)
+                          edges))
+        (node-leaks (fold (fn [(acc (List HealthAnomaly)) (node g/GraphNode)] -> (List HealthAnomaly)
+                            (let [(n-path (if (not (string-empty? (.-file node))) (.-file node) (.-name node)))
+                                  (l-node (module-to-layer n-path))]
+                              (if (and (= l-node 0)
+                                       (or (is-agent-id? (.-name node))
+                                           (or (is-agent-id? (.-id node))
+                                               (is-agent-id? (.-signature node)))))
+                                (let [(loc (str (.-file node) ":" (string-from-int64 (.-start-line node))))
+                                      (anom (HealthAnomaly
+                                              :kind (anomaly-layer-leakage)
+                                              :symbol (.-name node)
+                                              :location loc
+                                              :message (str "LAYER_LEAKAGE: Layer 0 component references forbidden agent ID '" (.-name node) "'")
+                                              :severity "blocker"
+                                              :metric 1))]
+                                  (list-append acc (list anom)))
+                                acc)))
+                          (list)
+                          nodes))]
+    (list-append edge-leaks node-leaks)))
+
 (df build-health-matrix [(g g/SymbolGraph) (scope Str)] -> HealthMatrix
   :d "Constructs unified structural health diagnostic matrix from SymbolGraph."
   (let [(cycles (detect-import-cycles g))
+        (layer-leaks (detect-layer-leakage g))
         (blast-hotspots (detect-blast-radius-hotspots g 10))
         (orphans (detect-orphan-exports g))
         (sig-mismatches (detect-signature-mismatches g))
         (complexity-hotspots (detect-cyclomatic-hotspots g 15))
         ;; Deterministic anomaly ordering: blockers first, then errors, then warnings
         (anomalies (list-append
-                     (list-append cycles sig-mismatches)
+                     (list-append (list-append cycles layer-leaks) sig-mismatches)
                      (list-append
                        (list-append blast-hotspots orphans)
                        complexity-hotspots)))
         (has-cycles (not (list-empty? cycles)))
-        (has-blockers (or has-cycles (not (list-empty? sig-mismatches))))
+        (has-blockers (or (or has-cycles (not (list-empty? layer-leaks)))
+                          (not (list-empty? sig-mismatches))))
         (healthy (not has-blockers))
         (total-n (g/graph-node-count g))
         (total-e (g/graph-edge-count g))]

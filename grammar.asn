@@ -142,6 +142,8 @@
           :rationale "Anomaly variant flagging signature mismatch across calls")
     (:sym :name "anomaly-complexity-hotspot" :kind :val :tokens 3
           :rationale "Anomaly variant flagging cyclomatic complexity line span hotspots")
+    (:sym :name "anomaly-layer-leakage" :kind :val :tokens 3
+          :rationale "Anomaly variant flagging illegal cross-layer upward dependencies")
     (:sym :name "HealthAnomaly" :kind :type :tokens 1)
     (:sym :name "HealthMatrix" :kind :type :tokens 1)
     (:sym :name "health-anomaly-kind-to-string" :kind :fn :tokens 5
@@ -156,6 +158,12 @@
           :rationale "Validates signature parameter parity across calls")
     (:sym :name "detect-cyclomatic-hotspots" :kind :fn :tokens 3
           :rationale "Flags functions exceeding line span complexity threshold")
+    (:sym :name "module-to-layer" :kind :fn :tokens 3
+          :rationale "Maps package or module identifier to architectural layer tier")
+    (:sym :name "is-agent-id?" :kind :fn :tokens 3
+          :rationale "Identifies agent identity references e.g. @scout, @coder, @reviewer")
+    (:sym :name "detect-layer-leakage" :kind :fn :tokens 3
+          :rationale "Traps illegal cross-layer upward dependencies and agent ID references")
     (:sym :name "build-health-matrix" :kind :fn :tokens 3
           :rationale "Aggregates structural health checks into unified matrix")
     (:sym :name "intel-health" :kind :fn :tokens 2)
@@ -177,6 +185,22 @@
           :rationale "Tests detection of high complexity line span hotspots")
     (:sym :name "test-build-health-matrix" :kind :fn :tokens 4
           :rationale "Tests complete health matrix construction and status")
+
+    ;; Boundary Test Symbols
+    (:sym :name "test-module-to-layer-mapping" :kind :fn :tokens 4
+          :rationale "Tests architectural layer tier mapping for core packages")
+    (:sym :name "test-boundary-clean-dag" :kind :fn :tokens 4
+          :rationale "Tests downward clean DAG zero leakage invariants")
+    (:sym :name "test-boundary-layer0-clean" :kind :fn :tokens 4
+          :rationale "Tests Layer 0 self-containment zero leakage invariants")
+    (:sym :name "test-boundary-trap-layer0-import-layer1" :kind :fn :tokens 7
+          :rationale "Tests trapping illegal Layer 0 to Layer 1 import leakage")
+    (:sym :name "test-boundary-trap-agent-id-leakage" :kind :fn :tokens 6
+          :rationale "Tests trapping prohibited agent ID references in Layer 0")
+    (:sym :name "test-boundary-trap-layer0-import-layer3" :kind :fn :tokens 7
+          :rationale "Tests trapping illegal Layer 0 to Layer 3 import leakage")
+    (:sym :name "test-boundary-trap-layer1-import-layer3" :kind :fn :tokens 7
+          :rationale "Tests trapping illegal Layer 1 to Layer 3 import leakage")
 
     ;; Text & Document Intelligence Symbols
     (:sym :name "TextSection" :kind :type :tokens 1)
