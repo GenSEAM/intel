@@ -8,11 +8,13 @@
       (diagram :a [DiagramFormat diagram-format-mermaid diagram-format-asn
                    diagram-format-to-string
                    generate-mermaid-diagram generate-asn-diagram generate-diagram
-                   render-mermaid-dag render-asn-dag])]
+                   render-mermaid-dag render-asn-dag])
+      (placement :a [audit-file-placement])]
   :x [intel-version intel-banner
       intel-health build-health-matrix format-health-report
       render-mermaid-dag render-asn-dag
-      generate-mermaid-diagram generate-asn-diagram generate-diagram])
+      generate-mermaid-diagram generate-asn-diagram generate-diagram
+      audit-file-placement])
 
 (df intel-version [] -> Str
   (:d "Return the ASL-Intel version string")

@@ -268,5 +268,10 @@
           :rationale "Tests 3-state DFS cycle detection across graphs")
     (:sym :name "test-cli-hotspots-threshold" :kind :fn :tokens 4
           :rationale "Tests blast radius and cyclomatic span thresholding")
+
+    ;; Phase 266 Data Placement Observability Symbols
+    (:sym :name "audit-file-placement" :kind :fn :tokens 3
+          :rationale "Audits file content for data placement layout and token compaction potential")
   ]
 )
+
