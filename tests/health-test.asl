@@ -42,7 +42,8 @@
                  :nodes (list na nb nc)
                  :edges (list e1 e2)))
         (anoms (h/detect-import-cycles graph))]
-    (list-empty? anoms)))
+    (assert (list-empty? anoms) "Acyclic linear DAG must have zero cycle anomalies")
+    true))
 
 (df test-detect-cycles-diamond-dag [] -> Bool
   :d "Verifies 3-state DFS prevents false-positive cycle detection on Diamond DAG (A->B, A->C, B->D, C->D)."
@@ -58,7 +59,8 @@
                  :nodes (list na nb nc nd)
                  :edges (list e1 e2 e3 e4)))
         (anoms (h/detect-import-cycles graph))]
-    (list-empty? anoms)))
+    (assert (list-empty? anoms) "Diamond DAG must have zero cycle anomalies")
+    true))
 
 (df test-detect-self-cycle [] -> Bool
   :d "Verifies that a 1-hop self-referential import (A -> A) triggers a blocker cycle anomaly."
@@ -69,12 +71,13 @@
                  :edges (list e1)))
         (anoms (h/detect-import-cycles graph))
         (head-opt (list-head anoms))]
-    (mt head-opt
-      ((none) false)
-      ((some anom)
-       (and (= (list-length anoms) 1)
-            (and (= (.-severity anom) "blocker")
-                 (string-contains? (.-message anom) "CYCLE_DETECTED")))))))
+    (assert (mt head-opt
+              ((none) false)
+              ((some anom)
+               (and (= (list-length anoms) 1)
+                    (and (= (.-severity anom) "blocker")
+                         (string-contains? (.-message anom) "CYCLE_DETECTED"))))) "Self-referential import must trigger blocker CYCLE_DETECTED")
+    true))
 
 (df test-blast-radius-hotspot [] -> Bool
   :d "Verifies that a symbol with 10 incoming edges triggers an anomaly-blast-radius warning."
@@ -106,13 +109,14 @@
                  :edges (list e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e-leaf)))
         (anoms (h/detect-blast-radius-hotspots graph 10))
         (head-opt (list-head anoms))]
-    (mt head-opt
-      ((none) false)
-      ((some anom)
-       (and (= (list-length anoms) 1)
-            (and (= (.-symbol anom) "hub")
-                 (and (= (.-metric anom) 10)
-                      (= (.-severity anom) "warning"))))))))
+    (assert (mt head-opt
+              ((none) false)
+              ((some anom)
+               (and (= (list-length anoms) 1)
+                    (and (= (.-symbol anom) "hub")
+                         (and (= (.-metric anom) 10)
+                              (= (.-severity anom) "warning")))))) "Hub with 10 callers must trigger blast radius warning")
+    true))
 
 (df test-orphan-exports [] -> Bool
   :d "Verifies that an exported symbol with zero incoming references is flagged as orphan export."
@@ -126,12 +130,13 @@
                  :edges (list e-used)))
         (anoms (h/detect-orphan-exports graph))
         (head-opt (list-head anoms))]
-    (mt head-opt
-      ((none) false)
-      ((some anom)
-       (and (= (list-length anoms) 1)
-            (and (= (.-symbol anom) "orphan-fn")
-                 (= (.-severity anom) "warning")))))))
+    (assert (mt head-opt
+              ((none) false)
+              ((some anom)
+               (and (= (list-length anoms) 1)
+                    (and (= (.-symbol anom) "orphan-fn")
+                         (= (.-severity anom) "warning"))))) "Unused exported function must trigger orphan export warning")
+    true))
 
 (df test-cyclomatic-hotspot [] -> Bool
   :d "Verifies that a function with line-span > 15 is flagged as a complexity hotspot."
@@ -142,13 +147,14 @@
                  :edges (list)))
         (anoms (h/detect-cyclomatic-hotspots graph 15))
         (head-opt (list-head anoms))]
-    (mt head-opt
-      ((none) false)
-      ((some anom)
-       (and (= (list-length anoms) 1)
-            (and (= (.-symbol anom) "giant-fn")
-                 (and (= (.-metric anom) 30)
-                      (= (.-severity anom) "warning"))))))))
+    (assert (mt head-opt
+              ((none) false)
+              ((some anom)
+               (and (= (list-length anoms) 1)
+                    (and (= (.-symbol anom) "giant-fn")
+                         (and (= (.-metric anom) 30)
+                              (= (.-severity anom) "warning")))))) "Function with 30 lines must trigger complexity hotspot warning")
+    true))
 
 (df test-build-health-matrix [] -> Bool
   :d "Verifies unified health matrix assembly, blocking evaluation, and report formatting."
@@ -161,21 +167,23 @@
         (matrix (h/build-health-matrix graph "test-scope"))
         (report (h/format-health-report matrix))
         (clean-matrix (h/intel-health "clean-scope"))]
-    (and (= (.-scope matrix) "test-scope")
-         (and (= (.-total-nodes matrix) 2)
-              (and (= (.-total-edges matrix) 1)
-                   (and (.-has-cycles matrix)
-                        (and (not (.-healthy matrix))
-                             (and (string-contains? report "CODEBASE STRUCTURAL HEALTH REPORT")
-                                  (and (.-healthy clean-matrix)
-                                       (not (.-has-cycles clean-matrix)))))))))))
+    (assert (= (.-scope matrix) "test-scope") "Matrix scope must match")
+    (assert (= (.-total-nodes matrix) 2) "Total nodes must be 2")
+    (assert (= (.-total-edges matrix) 1) "Total edges must be 1")
+    (assert (.-has-cycles matrix) "Cyclic graph must flag has-cycles")
+    (assert (not (.-healthy matrix)) "Cyclic graph must not be healthy")
+    (assert (string-contains? report "CODEBASE STRUCTURAL HEALTH REPORT") "Report must contain header")
+    (assert (.-healthy clean-matrix) "Clean matrix must be healthy")
+    (assert (not (.-has-cycles clean-matrix)) "Clean matrix must not have cycles")
+    true))
 
 (df run-tests [] -> Bool
   :d "Executes full codebase structural health test suite."
-  (and (test-detect-cycles-clean-dag)
-       (and (test-detect-cycles-diamond-dag)
-            (and (test-detect-self-cycle)
-                 (and (test-blast-radius-hotspot)
-                      (and (test-orphan-exports)
-                           (and (test-cyclomatic-hotspot)
-                                (test-build-health-matrix))))))))
+  (let [(_t1 (test-detect-cycles-clean-dag))
+        (_t2 (test-detect-cycles-diamond-dag))
+        (_t3 (test-detect-self-cycle))
+        (_t4 (test-blast-radius-hotspot))
+        (_t5 (test-orphan-exports))
+        (_t6 (test-cyclomatic-hotspot))
+        (_t7 (test-build-health-matrix))]
+    true))
