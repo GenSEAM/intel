@@ -2,7 +2,8 @@
   :d "Automated Codebase Structural Health Matrix & Invariant Anomaly Detection Engine"
   :x [HealthAnomalyKind
       anomaly-cycle anomaly-blast-radius anomaly-orphan-export anomaly-signature-mismatch anomaly-complexity-hotspot anomaly-layer-leakage
-      HealthAnomaly HealthMatrix
+      anomaly-broken-reference anomaly-dangling-pointer
+      HealthAnomaly HealthMatrix RefEdge
       health-anomaly-kind-to-string
       detect-import-cycles
       detect-blast-radius-hotspots
@@ -12,10 +13,15 @@
       module-to-layer
       is-agent-id?
       detect-layer-leakage
+      detect-broken-references
+      detect-dangling-pointers
+      detect-cyclic-references
+      audit-reference-integrity
       build-health-matrix
       intel-health
       format-health-report]
-  :i [(graph :a g)])
+  :i [(graph :a g)
+      (xref :a xr)])
 
 (dfe HealthAnomalyKind
   (:c anomaly-cycle [] "Cycle detected in import dependencies")
@@ -23,7 +29,9 @@
   (:c anomaly-orphan-export [] "Orphan export: exported symbol with zero references")
   (:c anomaly-signature-mismatch [] "Signature mismatch across call edge")
   (:c anomaly-complexity-hotspot [] "Complexity hotspot: function exceeding complexity threshold")
-  (:c anomaly-layer-leakage [] "Boundary violation: illegal cross-layer dependency from lower to higher layer"))
+  (:c anomaly-layer-leakage [] "Boundary violation: illegal cross-layer dependency from lower to higher layer")
+  (:c anomaly-broken-reference [] "Broken reference: reference targets nonexistent symbol, task, ADR or anchor")
+  (:c anomaly-dangling-pointer [] "Dangling pointer: perceptual pointer or memory chunk targets missing buffer"))
 
 (dfs HealthAnomaly
   (:f kind HealthAnomalyKind "Category of detected health anomaly")
@@ -45,6 +53,15 @@
   (:f visited (List Str) "Set of fully explored nodes")
   (:f anomalies (List HealthAnomaly) "Accumulated cycle anomalies"))
 
+(dfs RefEdge
+  (:f source Str "Origin entity or symbol identifier")
+  (:f target Str "Destination entity or target identifier"))
+
+(dfs XRefCycleState
+  (:f visited (List Str) "Set of fully explored nodes")
+  (:f in-path (List Str) "Set of nodes on active exploration path")
+  (:f anomalies (List HealthAnomaly) "Accumulated cycle anomalies"))
+
 (df health-anomaly-kind-to-string [(k HealthAnomalyKind)] -> Str
   :d "Convert HealthAnomalyKind enum variant to string identifier"
   (mt k
@@ -53,7 +70,9 @@
     ((anomaly-orphan-export) "orphan-export")
     ((anomaly-signature-mismatch) "signature-mismatch")
     ((anomaly-complexity-hotspot) "complexity-hotspot")
-    ((anomaly-layer-leakage) "layer-leakage")))
+    ((anomaly-layer-leakage) "layer-leakage")
+    ((anomaly-broken-reference) "broken-reference")
+    ((anomaly-dangling-pointer) "dangling-pointer")))
 
 (df find-node-by-key [(nodes (List g/GraphNode)) (key Str)] -> (Option g/GraphNode)
   :d "Finds a node in nodes list by matching id or name against key."
@@ -98,7 +117,6 @@
                        (nodes (List g/GraphNode))] -> CycleDfsState
   :d "3-state depth-first search for cycle detection in import graph."
   (if (list-contains? in-path curr)
-    ;; In-path check: node is already on active call chain -> CYCLE DETECTED!
     (let [(node-opt (find-node-by-key nodes curr))
           (loc (node-location node-opt curr))
           (msg (str "CYCLE_DETECTED: Circular import barrier violation involving '" curr "'"))
@@ -116,9 +134,7 @@
           :visited (.-visited state)
           :anomalies (list-append cur-anoms (list anom)))))
     (if (list-contains? (.-visited state) curr)
-      ;; Already visited and verified acyclic in a finished branch (e.g. Diamond DAG join node)
       state
-      ;; Fresh unvisited node
       (let [(next-path (cons curr in-path))
             (targets (get-import-targets curr edges))
             (after-targets (fold (fn [(st CycleDfsState) (tgt Str)] -> CycleDfsState
@@ -135,7 +151,6 @@
                                 (= (g/edge-kind-to-string (.-kind e)) "imports"))
                               (.-edges g)))
         (all-nodes (.-nodes g))
-        ;; Collect all potential start keys: node ids, names, and edge sources
         (node-keys (fold (fn [(acc (List Str)) (n g/GraphNode)] -> (List Str)
                            (let [(k (if (not (string-empty? (.-id n))) (.-id n) (.-name n)))]
                              (if (list-contains? acc k) acc (list-append acc (list k)))))
@@ -207,7 +222,6 @@
             (let [(callee-opt (find-node-by-key nodes (.-dst edge)))]
               (mt callee-opt
                 ((none)
-                 ;; Unresolved callee
                  (let [(anom (HealthAnomaly
                                :kind (anomaly-signature-mismatch)
                                :symbol (.-dst edge)
@@ -219,7 +233,6 @@
                 ((some callee)
                  (let [(sig (string-trim (.-signature callee)))]
                    (if (or (string-empty? sig) (string-contains? sig "mismatch"))
-                     ;; Missing signature or explicitly incompatible signature
                      (let [(anom (HealthAnomaly
                                    :kind (anomaly-signature-mismatch)
                                    :symbol (.-name callee)
@@ -349,6 +362,121 @@
                           nodes))]
     (list-append edge-leaks node-leaks)))
 
+(df get-xref-targets [(curr Str) (edges (List RefEdge))] -> (List Str)
+  :d "Finds outgoing target nodes from curr in edge list"
+  (fold (fn [(acc (List Str)) (e RefEdge)] -> (List Str)
+          (if (= (.-source e) curr)
+              (let [(tgt (.-target e))]
+                (if (list-contains? acc tgt)
+                    acc
+                    (list-append acc (list tgt))))
+              acc))
+        (list)
+        edges))
+
+(df dfs-xref-cycle [(curr Str)
+                    (state XRefCycleState)
+                    (edges (List RefEdge))] -> XRefCycleState
+  :d "3-state depth-first search for cycle detection in cross-reference graph"
+  (if (list-contains? (.-in-path state) curr)
+      (let [(msg (str "CYCLIC_REFERENCE: Circular dependency chain detected involving '" curr "'"))
+            (anom (HealthAnomaly
+                    :kind (anomaly-cycle)
+                    :symbol curr
+                    :location "cross-reference"
+                    :message msg
+                    :severity "blocker"
+                    :metric (list-length (.-in-path state))))
+            (cur-anoms (.-anomalies state))]
+        (if (has-symbol-in-anomalies? cur-anoms curr)
+            state
+            (XRefCycleState
+              :visited (.-visited state)
+              :in-path (.-in-path state)
+              :anomalies (list-append cur-anoms (list anom)))))
+      (if (list-contains? (.-visited state) curr)
+          state
+          (let [(next-path (cons curr (.-in-path state)))
+                (targets (get-xref-targets curr edges))
+                (st1 (XRefCycleState
+                       :visited (.-visited state)
+                       :in-path next-path
+                       :anomalies (.-anomalies state)))
+                (after-targets (fold (fn [(st XRefCycleState) (tgt Str)] -> XRefCycleState
+                                       (dfs-xref-cycle tgt st edges))
+                                     st1
+                                     targets))]
+            (XRefCycleState
+              :visited (cons curr (.-visited after-targets))
+              :in-path (.-in-path state)
+              :anomalies (.-anomalies after-targets))))))
+
+(df detect-cyclic-references [(edges (List RefEdge))] -> (List HealthAnomaly)
+  :d "Detects circular dependency cycles across cross-reference edges"
+  (let [(all-nodes (fold (fn [(acc (List Str)) (e RefEdge)] -> (List Str)
+                           (let [(s (.-source e))
+                                 (t (.-target e))
+                                 (acc1 (if (list-contains? acc s) acc (list-append acc (list s))))]
+                             (if (list-contains? acc1 t) acc1 (list-append acc1 (list t)))))
+                         (list)
+                         edges))
+        (init-state (XRefCycleState :visited (list) :in-path (list) :anomalies (list)))
+        (final-state (fold (fn [(st XRefCycleState) (node Str)] -> XRefCycleState
+                             (if (list-contains? (.-visited st) node)
+                                 st
+                                 (dfs-xref-cycle node st edges)))
+                           init-state
+                           all-nodes))]
+    (.-anomalies final-state)))
+
+(df detect-broken-references [(refs (List xr/CrossReference)) (valid-targets (List Str))] -> (List HealthAnomaly)
+  :d "Detects broken cross-references targeting nonexistent symbols, tasks, ADRs, or files"
+  (fold (fn [(acc (List HealthAnomaly)) (ref xr/CrossReference)] -> (List HealthAnomaly)
+          (let [(tgt (.-target ref))
+                (k (.-kind tgt))
+                (id (.-id tgt))
+                (formatted (xr/format-ref-uri tgt))
+                (is-valid (or (list-contains? valid-targets formatted)
+                              (or (list-contains? valid-targets id)
+                                  (list-contains? valid-targets (str k ":" id)))))]
+            (if is-valid
+                acc
+                (let [(anom (HealthAnomaly
+                              :kind (anomaly-broken-reference)
+                              :symbol formatted
+                              :location (.-source ref)
+                              :message (str "BROKEN_REFERENCE: Target '" formatted "' in '" (.-source ref) "' not found in valid registry")
+                              :severity "error"
+                              :metric 1))]
+                  (list-append acc (list anom))))))
+        (list)
+        refs))
+
+(df detect-dangling-pointers [(pointers (List Str)) (valid-buffers (List Str))] -> (List HealthAnomaly)
+  :d "Detects perceptual pointers or memory chunks referencing vanished target buffers"
+  (fold (fn [(acc (List HealthAnomaly)) (ptr Str)] -> (List HealthAnomaly)
+          (if (list-contains? valid-buffers ptr)
+              acc
+              (let [(anom (HealthAnomaly
+                            :kind (anomaly-dangling-pointer)
+                            :symbol ptr
+                            :location "mem/pointers"
+                            :message (str "DANGLING_POINTER: Target memory buffer for pointer '" ptr "' has vanished")
+                            :severity "error"
+                            :metric 1))]
+                (list-append acc (list anom)))))
+        (list)
+        pointers))
+
+(df audit-reference-integrity [(refs (List xr/CrossReference)) (valid-targets (List Str))] -> (List HealthAnomaly)
+  :d "Audits cross-references for broken target anchors, dangling pointers, and cyclic dependency chains"
+  (let [(broken (detect-broken-references refs valid-targets))
+        (edges (map (fn [(r xr/CrossReference)] -> RefEdge
+                      (RefEdge :source (.-source r) :target (xr/format-ref-uri (.-target r))))
+                    refs))
+        (cycles (detect-cyclic-references edges))]
+    (list-append broken cycles)))
+
 (df build-health-matrix [(g g/SymbolGraph) (scope Str)] -> HealthMatrix
   :d "Constructs unified structural health diagnostic matrix from SymbolGraph."
   (let [(cycles (detect-import-cycles g))
@@ -357,7 +485,6 @@
         (orphans (detect-orphan-exports g))
         (sig-mismatches (detect-signature-mismatches g))
         (complexity-hotspots (detect-cyclomatic-hotspots g 15))
-        ;; Deterministic anomaly ordering: blockers first, then errors, then warnings
         (anomalies (list-append
                      (list-append (list-append cycles layer-leaks) sig-mismatches)
                      (list-append
