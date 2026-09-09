@@ -23,11 +23,13 @@
   (:f context Str "Context or docstring excerpt containing the reference"))
 
 (df strip-ref-prefix [(s Str)] -> Str
-  :d "Strips leading @ref: prefix if present"
+  :d "Strips leading ref: or @ref: prefix if present"
   (let [(trimmed (string-trim s))]
-    (if (string-starts-with? trimmed "@ref:")
-        (string-trim (option-or (string-slice trimmed 5 (string-length trimmed)) ""))
-        trimmed)))
+    (if (string-starts-with? trimmed "ref:")
+        (string-trim (option-or (string-slice trimmed 4 (string-length trimmed)) ""))
+        (if (string-starts-with? trimmed "@ref:")
+            (string-trim (option-or (string-slice trimmed 5 (string-length trimmed)) ""))
+            trimmed))))
 
 (df clean-ref-token [(tok Str)] -> Str
   :d "Strips punctuation and delimiters from an extracted reference token"
@@ -104,12 +106,13 @@
             (= (.-line a) (.-line b)))))
 
 (df extract-docstring-refs [(source Str) (docstring Str)] -> (List CrossReference)
-  :d "Scans an ASL docstring for @ref: URI annotations and parses them into CrossReference records"
+  :d "Scans an ASL docstring for ref: or @ref: URI annotations and parses them into CrossReference records"
   (let [(s1 (string-replace docstring "\n" " "))
         (s2 (string-replace s1 "\t" " "))
         (tokens (string-split s2 " "))
         (ref-tokens (filter (fn [(tok Str)] -> Bool
-                              (string-contains? tok "@ref:"))
+                              (or (string-contains? tok "ref:")
+                                  (string-contains? tok "@ref:")))
                             tokens))]
     (map (fn [(raw-tok Str)] -> CrossReference
            (let [(cleaned (clean-ref-token raw-tok))

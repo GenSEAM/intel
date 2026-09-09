@@ -1,7 +1,7 @@
 ;; Package Grammar & Exported Symbol Registry (ASN)
-;; @genseam/asl-intel
+;; asl-intel
 (:grammar
-  :package @genseam/asl-intel
+  :package asl-intel
   :version "0.1.0"
   :tokens-baseline 2
   :symbols [
@@ -161,7 +161,7 @@
     (:sym :name "module-to-layer" :kind :fn :tokens 3
           :rationale "Maps package or module identifier to architectural layer tier")
     (:sym :name "is-agent-id?" :kind :fn :tokens 3
-          :rationale "Identifies agent identity references e.g. @scout, @coder, @reviewer")
+          :rationale "Identifies agent identity references e.g. :scout, :coder, :reviewer")
     (:sym :name "detect-layer-leakage" :kind :fn :tokens 3
           :rationale "Traps illegal cross-layer upward dependencies and agent ID references")
     (:sym :name "build-health-matrix" :kind :fn :tokens 3
@@ -284,7 +284,7 @@
     (:sym :name "anomaly-dangling-pointer" :kind :val :tokens 3
           :rationale "Anomaly variant flagging dangling memory pointers or vanished buffers")
     (:sym :name "strip-ref-prefix" :kind :fn :tokens 3
-          :rationale "Strips canonical @ref: shortcode prefix from reference token")
+          :rationale "Strips canonical ref: shortcode prefix from reference token")
     (:sym :name "clean-ref-token" :kind :fn :tokens 3
           :rationale "Strips surrounding punctuation and delimiters from reference token")
     (:sym :name "parse-ref-uri" :kind :fn :tokens 3
@@ -296,7 +296,7 @@
     (:sym :name "ref-target-to-string" :kind :fn :tokens 4
           :rationale "Serializes RefTarget into formatted string representation")
     (:sym :name "extract-docstring-refs" :kind :fn :tokens 3
-          :rationale "Scans ASL docstring for @ref: URI annotations without inline comments")
+          :rationale "Scans ASL docstring for ref: URI annotations without inline comments")
     (:sym :name "make-xref-graph" :kind :fn :tokens 3
           :rationale "Constructs empty in-memory universal cross-reference bipartite graph")
     (:sym :name "list-add-unique" :kind :fn :tokens 3

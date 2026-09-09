@@ -241,7 +241,7 @@
 (df format-preload-context [(horizon PreloadedHorizon)] -> Str
   :d "Serializes a PreloadedHorizon into an ultra-dense ASN context payload ready for LLM prompt injection"
   (let [(stubs (.-stubs horizon))
-        (header (str "(@horizon :target \"" (.-target-symbol horizon)
+        (header (str "(:horizon :target \"" (.-target-symbol horizon)
                      "\" :budget " (string-from-int64 (.-token-budget horizon))
                      " :tokens " (string-from-int64 (.-total-tokens horizon))
                      " :truncated " (if (.-truncated horizon) "true" "false")))]

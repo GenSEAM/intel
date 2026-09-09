@@ -294,11 +294,13 @@
           0)))))
 
 (df is-agent-id? [(s Str)] -> Bool
-  :d "Identifies agent identity references e.g. @scout, @coder, @reviewer, @<agent>."
+  :d "Identifies agent identity references e.g. scout, coder, reviewer."
   (let [(trimmed (string-trim s))]
-    (and (string-starts-with? trimmed "@")
+    (and (or (string-starts-with? trimmed "@")
+             (string-starts-with? trimmed ":agent:"))
          (and (> (string-length trimmed) 1)
               (and (not (string-contains? trimmed "/"))
+                   (not (string-starts-with? trimmed "wal"))
                    (not (string-starts-with? trimmed "@wal")))))))
 
 (df detect-layer-leakage [(g g/SymbolGraph)] -> (List HealthAnomaly)
@@ -524,8 +526,8 @@
       (str header "\nNo anomalies detected. Codebase structure is clean.")
       (let [(anom-lines (map (fn [(a HealthAnomaly)] -> Str
                                (str "  [" (.-severity a) "] " (.-symbol a)
-                                    " @" (.-location a) " (metric: "
-                                    (string-from-int64 (.-metric a)) "): "
-                                    (.-message a)))
+                                   " at " (.-location a) " (metric: "
+                                   (string-from-int64 (.-metric a)) "): "
+                                   (.-message a)))
                              (.-anomalies matrix)))]
         (str header "\nDetected Anomalies:\n" (string-join "\n" anom-lines))))))

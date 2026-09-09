@@ -150,7 +150,7 @@
   (let [(g (build-test-graph))
         (h (pr/intel-preload-graph g "app/main" 2 10000))
         (ctx (pr/format-preload-context h))]
-    (assert (string-contains? ctx "@horizon") "Context must contain @horizon")
+    (assert (string-contains? ctx ":horizon") "Context must contain :horizon")
     (assert (string-contains? ctx ":target \"app/main\"") "Context must contain target")
     (assert (string-contains? ctx ":budget 10000") "Context must contain budget 10000")
     (assert (string-contains? ctx ":tokens") "Context must contain :tokens")
