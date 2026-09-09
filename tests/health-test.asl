@@ -43,6 +43,7 @@
                  :edges (list e1 e2)))
         (anoms (h/detect-import-cycles graph))]
     (assert (list-empty? anoms) "Acyclic linear DAG must have zero cycle anomalies")
+    (assert (= (list-length anoms) 0) "Acyclic anomaly count must be 0")
     true))
 
 (df test-detect-cycles-diamond-dag [] -> Bool
@@ -60,6 +61,7 @@
                  :edges (list e1 e2 e3 e4)))
         (anoms (h/detect-import-cycles graph))]
     (assert (list-empty? anoms) "Diamond DAG must have zero cycle anomalies")
+    (assert (= (list-length anoms) 0) "Diamond DAG anomaly count must be 0")
     true))
 
 (df test-detect-self-cycle [] -> Bool
@@ -71,6 +73,7 @@
                  :edges (list e1)))
         (anoms (h/detect-import-cycles graph))
         (head-opt (list-head anoms))]
+    (assert (not (list-empty? anoms)) "Self cycle must produce anomalies")
     (assert (mt head-opt
               ((none) false)
               ((some anom)
@@ -109,6 +112,7 @@
                  :edges (list e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e-leaf)))
         (anoms (h/detect-blast-radius-hotspots graph 10))
         (head-opt (list-head anoms))]
+    (assert (not (list-empty? anoms)) "Blast radius must produce anomalies")
     (assert (mt head-opt
               ((none) false)
               ((some anom)
@@ -130,6 +134,7 @@
                  :edges (list e-used)))
         (anoms (h/detect-orphan-exports graph))
         (head-opt (list-head anoms))]
+    (assert (not (list-empty? anoms)) "Orphan exports must produce anomalies")
     (assert (mt head-opt
               ((none) false)
               ((some anom)
@@ -147,6 +152,7 @@
                  :edges (list)))
         (anoms (h/detect-cyclomatic-hotspots graph 15))
         (head-opt (list-head anoms))]
+    (assert (not (list-empty? anoms)) "Complexity hotspot must produce anomalies")
     (assert (mt head-opt
               ((none) false)
               ((some anom)

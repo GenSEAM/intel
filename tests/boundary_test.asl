@@ -73,6 +73,7 @@
         (graph (g/SymbolGraph :nodes (list n-parser n-codec) :edges (list e0)))
         (anoms (h/detect-layer-leakage graph))]
     (assert (list-empty? anoms) "Layer 0 to Layer 0 dependency must produce 0 leakage anomalies")
+    (assert (= (list-length anoms) 0) "Layer 0 anomaly count must be 0")
     true))
 
 (df test-boundary-trap-layer0-import-layer1 [] -> Bool

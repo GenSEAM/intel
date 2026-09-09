@@ -9,6 +9,7 @@
   :d "Verifies intel version string conforms to semver 0.1.0."
   (let [(v (int/intel-version))]
     (assert (string-equals? v "0.1.0") "Intel version must be 0.1.0")
+    (assert (not (string-equals? v "0.0.0")) "Intel version must not be 0.0.0")
     true))
 
 (df test-intel-banner [] -> Bool

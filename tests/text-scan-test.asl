@@ -32,12 +32,14 @@
 (df test-extract-doc-section [] -> Bool
   :d "Tests selective extraction of targeted markdown chapter"
   (let [(md (sample-markdown))
-        (sec (ts/extract-doc-section md "Architecture Principles"))]
+        (sec (ts/extract-doc-section md "Architecture Principles"))
+        (missing (ts/extract-doc-section md "Nonexistent Section"))]
     (assert (mt sec
               ((none) false)
               ((some body)
                (and (string-contains? body "Effective Decision Mode")
                     (not (string-contains? body "Tool Reference"))))) "Section extraction must contain targeted content without trailing chapter")
+    (assert (option-none? missing) "Missing section must return none")
     true))
 
 (df test-search-doc-snippets [] -> Bool
