@@ -1,16 +1,16 @@
 (module asl-intel/tests/preload-test
   :d "Pure ASL test suite for Graph-Horizon Paging H(m, k, B) and Scoped Preload Engine."
-  :x [test-stub-token-estimation
-      test-preload-tier-conversion
-      test-horizon-budget-enforcement
-      test-horizon-add-stub-budget
-      test-horizon-zero-budget
-      test-intel-preload-graph-multi-tier
-      test-intel-preload-depth-scoping
-      test-intel-preload-empty-target
-      test-intel-preload-missing-target
-      test-intel-preload-zero-depth
-      test-format-preload-context
+  :x [TestStubTokenEstimation
+      TestPreloadTierConversion
+      TestHorizonBudgetEnforcement
+      TestHorizonAddStubBudget
+      TestHorizonZeroBudget
+      TestIntelPreloadGraphMultiTier
+      TestIntelPreloadDepthScoping
+      TestIntelPreloadEmptyTarget
+      TestIntelPreloadMissingTarget
+      TestIntelPreloadZeroDepth
+      TestFormatPreloadContext
       run-tests]
   :i [(preload :a pr)
       (graph :a g)])
@@ -34,7 +34,7 @@
         (g7 (g/graph-add-edge g6 e3))]
     g7))
 
-(df test-stub-token-estimation [] -> Bool
+(df TestStubTokenEstimation [] -> Bool
   :d "Verifies deterministic token estimation for stubs and raw text"
   (let [(stub-explicit (pr/stub-create "sym-a" (pr/tier-micro-ast) "src/a.asl" "(df sym-a [] -> I64)" "doc" 42))
         (stub-calc (pr/stub-create "sym-b" (pr/tier-meso-symbol) "src/b.asl" "(df sym-b [] -> Str)" "" 0))]
@@ -44,14 +44,14 @@
     (assert (> (pr/estimate-stub-tokens stub-calc) 0) "Calculated token stub should exceed 0")
     true))
 
-(df test-preload-tier-conversion [] -> Bool
+(df TestPreloadTierConversion [] -> Bool
   :d "Verifies string conversion across all 3 tiers"
   (assert (string-equals? (pr/preload-tier-to-string (pr/tier-micro-ast)) "micro-ast") "Tier micro-ast string must match")
   (assert (string-equals? (pr/preload-tier-to-string (pr/tier-meso-symbol)) "meso-symbol") "Tier meso-symbol string must match")
   (assert (string-equals? (pr/preload-tier-to-string (pr/tier-macro-topology)) "macro-topology") "Tier macro-topology string must match")
   true)
 
-(df test-horizon-budget-enforcement [] -> Bool
+(df TestHorizonBudgetEnforcement [] -> Bool
   :d "Verifies that adding stubs halts when token budget is exceeded and marks truncated: true"
   (let [(h0 (pr/horizon-create "app/main" 2 100))
         (s1 (pr/stub-create "s1" (pr/tier-meso-symbol) "f1.asl" "sig1" "" 60))
@@ -66,7 +66,7 @@
     (assert (= (list-length (.-stubs h2)) 1) "h2 stubs length must remain 1")
     true))
 
-(df test-horizon-add-stub-budget [] -> Bool
+(df TestHorizonAddStubBudget [] -> Bool
   :d "Verifies that horizon-add-stub short-circuits when horizon is already truncated"
   (let [(h0 (pr/horizon-create "app/main" 2 100))
         (s1 (pr/stub-create "s1" (pr/tier-meso-symbol) "f1.asl" "sig1" "" 60))
@@ -82,7 +82,7 @@
     (assert (= (.-total-tokens h3) 60) "h3 total tokens must remain 60")
     true))
 
-(df test-horizon-zero-budget [] -> Bool
+(df TestHorizonZeroBudget [] -> Bool
   :d "Verifies that zero budget immediately truncates on stub addition"
   (let [(hz (pr/horizon-create "app/main" 2 0))
         (s1 (pr/stub-create "s1" (pr/tier-micro-ast) "f1.asl" "sig" "doc" 10))
@@ -91,7 +91,7 @@
     (assert (.-truncated hz-res) "Zero budget horizon must be marked truncated")
     true))
 
-(df test-intel-preload-graph-multi-tier [] -> Bool
+(df TestIntelPreloadGraphMultiTier [] -> Bool
   :d "Verifies 3-tier hydration: Depth 0 (micro-ast), Depth 1 (meso-symbol), Depth 2 (macro-topology)"
   (let [(g (build-test-graph))
         (h (pr/intel-preload-graph g "app/main" 2 10000))
@@ -101,7 +101,7 @@
     (assert (string-equals? (.-target-symbol h) "app/main") "Target symbol must be app/main")
     true))
 
-(df test-intel-preload-depth-scoping [] -> Bool
+(df TestIntelPreloadDepthScoping [] -> Bool
   :d "Verifies depth limit k bounds graph traversal properly"
   (let [(g (build-test-graph))
         (h-d1 (pr/intel-preload-graph g "app/main" 1 10000))
@@ -112,7 +112,7 @@
     (assert (not (.-truncated h-name)) "Exact name depth 0 must not be truncated")
     true))
 
-(df test-intel-preload-empty-target [] -> Bool
+(df TestIntelPreloadEmptyTarget [] -> Bool
   :d "Verifies empty target symbol returns empty horizon without truncation"
   (let [(g (build-test-graph))
         (h1 (pr/intel-preload-graph g "" 2 1000))
@@ -125,7 +125,7 @@
     (assert (= (.-total-tokens h2) 0) "Whitespace target total tokens must be 0")
     true))
 
-(df test-intel-preload-missing-target [] -> Bool
+(df TestIntelPreloadMissingTarget [] -> Bool
   :d "Verifies unknown symbol returns empty horizon without truncation"
   (let [(g (build-test-graph))
         (h (pr/intel-preload-graph g "nonexistent/symbol" 2 1000))]
@@ -134,7 +134,7 @@
     (assert (= (.-total-tokens h) 0) "Missing target total tokens must be 0")
     true))
 
-(df test-intel-preload-zero-depth [] -> Bool
+(df TestIntelPreloadZeroDepth [] -> Bool
   :d "Verifies depth <= 0 bounds strictly to root target node at Depth 0"
   (let [(g (build-test-graph))
         (h0 (pr/intel-preload-graph g "app/main" 0 1000))
@@ -145,7 +145,7 @@
     (assert (not (.-truncated h-neg)) "Negative depth must not be truncated")
     true))
 
-(df test-format-preload-context [] -> Bool
+(df TestFormatPreloadContext [] -> Bool
   :d "Verifies serialization of PreloadedHorizon into dense ASN context"
   (let [(g (build-test-graph))
         (h (pr/intel-preload-graph g "app/main" 2 10000))
@@ -160,15 +160,15 @@
 
 (df run-tests [] -> Bool
   :d "Executes complete test suite for scoped graph-horizon preloading"
-  (let [(_t1 (test-stub-token-estimation))
-        (_t2 (test-preload-tier-conversion))
-        (_t3 (test-horizon-budget-enforcement))
-        (_t4 (test-horizon-add-stub-budget))
-        (_t5 (test-horizon-zero-budget))
-        (_t6 (test-intel-preload-graph-multi-tier))
-        (_t7 (test-intel-preload-depth-scoping))
-        (_t8 (test-intel-preload-empty-target))
-        (_t9 (test-intel-preload-missing-target))
-        (_t10 (test-intel-preload-zero-depth))
-        (_t11 (test-format-preload-context))]
+  (let [(_t1 (TestStubTokenEstimation))
+        (_t2 (TestPreloadTierConversion))
+        (_t3 (TestHorizonBudgetEnforcement))
+        (_t4 (TestHorizonAddStubBudget))
+        (_t5 (TestHorizonZeroBudget))
+        (_t6 (TestIntelPreloadGraphMultiTier))
+        (_t7 (TestIntelPreloadDepthScoping))
+        (_t8 (TestIntelPreloadEmptyTarget))
+        (_t9 (TestIntelPreloadMissingTarget))
+        (_t10 (TestIntelPreloadZeroDepth))
+        (_t11 (TestFormatPreloadContext))]
     true))

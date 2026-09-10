@@ -109,25 +109,25 @@
     ;; Preload Test Symbols
     (:sym :name "test-stub-token-estimation" :kind :fn :tokens 4
           :rationale "Tests token estimation on symbol stubs")
-    (:sym :name "test-preload-tier-conversion" :kind :fn :tokens 4
+    (:sym :name "TestPreloadTierConversion" :kind :fn :tokens 4
           :rationale "Tests conversion of preload tier enum to string")
-    (:sym :name "test-horizon-budget-enforcement" :kind :fn :tokens 4
+    (:sym :name "TestHorizonBudgetEnforcement" :kind :fn :tokens 4
           :rationale "Tests horizon budget enforcement and truncation")
-    (:sym :name "test-horizon-add-stub-budget" :kind :fn :tokens 5
+    (:sym :name "TestHorizonAddStubBudget" :kind :fn :tokens 5
           :rationale "Tests adding stubs under token budget constraints")
-    (:sym :name "test-horizon-zero-budget" :kind :fn :tokens 4
+    (:sym :name "TestHorizonZeroBudget" :kind :fn :tokens 4
           :rationale "Tests zero budget edge case in horizon")
-    (:sym :name "test-intel-preload-graph-multi-tier" :kind :fn :tokens 6
+    (:sym :name "TestIntelPreloadGraphMultiTier" :kind :fn :tokens 6
           :rationale "Tests multi-tier hydration in graph horizon paging")
-    (:sym :name "test-intel-preload-depth-scoping" :kind :fn :tokens 5
+    (:sym :name "TestIntelPreloadDepthScoping" :kind :fn :tokens 5
           :rationale "Tests depth scoping boundary conditions in preload")
-    (:sym :name "test-intel-preload-empty-target" :kind :fn :tokens 5
+    (:sym :name "TestIntelPreloadEmptyTarget" :kind :fn :tokens 5
           :rationale "Tests empty target string boundary in preload")
-    (:sym :name "test-intel-preload-missing-target" :kind :fn :tokens 5
+    (:sym :name "TestIntelPreloadMissingTarget" :kind :fn :tokens 5
           :rationale "Tests missing symbol target lookup in preload")
-    (:sym :name "test-intel-preload-zero-depth" :kind :fn :tokens 5
+    (:sym :name "TestIntelPreloadZeroDepth" :kind :fn :tokens 5
           :rationale "Tests zero depth scoping boundary in preload")
-    (:sym :name "test-format-preload-context" :kind :fn :tokens 4
+    (:sym :name "TestFormatPreloadContext" :kind :fn :tokens 4
           :rationale "Tests formatting of preloaded horizon into string context")
     (:sym :name "run-tests" :kind :fn :tokens 2)
 
@@ -171,19 +171,19 @@
           :rationale "Renders structural health matrix into formatted diagnostic report")
 
     ;; Health Test Symbols
-    (:sym :name "test-detect-cycles-clean-dag" :kind :fn :tokens 5
+    (:sym :name "TestDetectCyclesCleanDag" :kind :fn :tokens 5
           :rationale "Tests cycle detection on clean acyclic DAG")
-    (:sym :name "test-detect-cycles-diamond-dag" :kind :fn :tokens 5
+    (:sym :name "TestDetectCyclesDiamondDag" :kind :fn :tokens 5
           :rationale "Tests cycle detection on diamond DAG topology")
-    (:sym :name "test-detect-self-cycle" :kind :fn :tokens 4
+    (:sym :name "TestDetectSelfCycle" :kind :fn :tokens 4
           :rationale "Tests cycle detection on self-referential import")
-    (:sym :name "test-blast-radius-hotspot" :kind :fn :tokens 4
+    (:sym :name "TestBlastRadiusHotspot" :kind :fn :tokens 4
           :rationale "Tests detection of high fan-in blast radius hotspots")
-    (:sym :name "test-orphan-exports" :kind :fn :tokens 3
+    (:sym :name "TestOrphanExports" :kind :fn :tokens 3
           :rationale "Tests detection of uncalled exported symbols")
-    (:sym :name "test-cyclomatic-hotspot" :kind :fn :tokens 3
+    (:sym :name "TestCyclomaticHotspot" :kind :fn :tokens 3
           :rationale "Tests detection of high complexity line span hotspots")
-    (:sym :name "test-build-health-matrix" :kind :fn :tokens 4
+    (:sym :name "TestBuildHealthMatrix" :kind :fn :tokens 4
           :rationale "Tests complete health matrix construction and status")
 
     ;; Boundary Test Symbols

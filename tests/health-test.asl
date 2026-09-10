@@ -1,12 +1,13 @@
 (module asl-intel/tests/health-test
   :d "Unit tests for Codebase Structural Health Matrix & Invariant Anomaly Detection Engine."
-  :x [test-detect-cycles-clean-dag
-      test-detect-cycles-diamond-dag
-      test-detect-self-cycle
-      test-blast-radius-hotspot
-      test-orphan-exports
-      test-cyclomatic-hotspot
-      test-build-health-matrix
+  :x [TestDetectCyclesCleanDag
+      TestDetectCyclesDiamondDag
+      TestDetectSelfCycle
+      TestBlastRadiusHotspot
+      TestOrphanExports
+      TestCyclomaticHotspot
+      TestBuildHealthMatrix
+      TestMultidimensionalHealthMatrix
       run-tests]
   :i [(health :a h) (graph :a g)])
 
@@ -31,7 +32,7 @@
     :file (str "src/" src ".asl")
     :line 10))
 
-(df test-detect-cycles-clean-dag [] -> Bool
+(df TestDetectCyclesCleanDag [] -> Bool
   :d "Verifies that an acyclic linear DAG (A -> B -> C) triggers zero cycle anomalies."
   (let [(na (make-node "A" "A" 1 10 "[]" false))
         (nb (make-node "B" "B" 1 10 "[]" false))
@@ -46,7 +47,7 @@
     (assert (= (list-length anoms) 0) "Acyclic anomaly count must be 0")
     true))
 
-(df test-detect-cycles-diamond-dag [] -> Bool
+(df TestDetectCyclesDiamondDag [] -> Bool
   :d "Verifies 3-state DFS prevents false-positive cycle detection on Diamond DAG (A->B, A->C, B->D, C->D)."
   (let [(na (make-node "A" "A" 1 10 "[]" false))
         (nb (make-node "B" "B" 1 10 "[]" false))
@@ -64,7 +65,7 @@
     (assert (= (list-length anoms) 0) "Diamond DAG anomaly count must be 0")
     true))
 
-(df test-detect-self-cycle [] -> Bool
+(df TestDetectSelfCycle [] -> Bool
   :d "Verifies that a 1-hop self-referential import (A -> A) triggers a blocker cycle anomaly."
   (let [(na (make-node "A" "A" 1 10 "[]" false))
         (e1 (make-edge "A" "A" (g/edge-imports)))
@@ -82,7 +83,7 @@
                          (string-contains? (.-message anom) "CYCLE_DETECTED"))))) "Self-referential import must trigger blocker CYCLE_DETECTED")
     true))
 
-(df test-blast-radius-hotspot [] -> Bool
+(df TestBlastRadiusHotspot [] -> Bool
   :d "Verifies that a symbol with 10 incoming edges triggers an anomaly-blast-radius warning."
   (let [(hub (make-node "hub" "hub" 1 10 "[]" true))
         (leaf (make-node "leaf" "leaf" 1 10 "[]" false))
@@ -122,7 +123,7 @@
                               (= (.-severity anom) "warning")))))) "Hub with 10 callers must trigger blast radius warning")
     true))
 
-(df test-orphan-exports [] -> Bool
+(df TestOrphanExports [] -> Bool
   :d "Verifies that an exported symbol with zero incoming references is flagged as orphan export."
   (let [(orphan (make-node "orphan-fn" "orphan-fn" 1 10 "[]" true))
         (used (make-node "used-fn" "used-fn" 1 10 "[]" true))
@@ -143,7 +144,7 @@
                          (= (.-severity anom) "warning"))))) "Unused exported function must trigger orphan export warning")
     true))
 
-(df test-cyclomatic-hotspot [] -> Bool
+(df TestCyclomaticHotspot [] -> Bool
   :d "Verifies that a function with line-span > 15 is flagged as a complexity hotspot."
   (let [(giant (make-node "giant-fn" "giant-fn" 1 31 "[]" false))
         (normal (make-node "normal-fn" "normal-fn" 1 10 "[]" false))
@@ -162,7 +163,7 @@
                               (= (.-severity anom) "warning")))))) "Function with 30 lines must trigger complexity hotspot warning")
     true))
 
-(df test-build-health-matrix [] -> Bool
+(df TestBuildHealthMatrix [] -> Bool
   :d "Verifies unified health matrix assembly, blocking evaluation, and report formatting."
   (let [(na (make-node "A" "A" 1 10 "[]" false))
         (nb (make-node "B" "B" 1 10 "[]" false))
@@ -183,13 +184,33 @@
     (assert (not (.-has-cycles clean-matrix)) "Clean matrix must not have cycles")
     true))
 
+(df TestMultidimensionalHealthMatrix [] -> Bool
+  :d "Verifies 5D health matrix: token penalty detection, uncompensated saga tracking, and overall health scoring."
+  (let [(symbols (list "txt/starts?" "v/norm" "test-ast-mutation-deleted-assertion-blocked" "short-name"))
+        (actions (list "vfsWrite:clean" "procSpawn:cmd:cat:cleanup:procKill" "procSpawn:orphan:no-cleanup"))
+        (empty-g (g/SymbolGraph :nodes (list) :edges (list)))
+        (base-matrix (h/build-health-matrix empty-g "test-scope"))
+        (token-anoms (h/detect-token-penalties symbols))
+        (saga-anoms (h/detect-uncompensated-sagas actions))
+        (task-ids (list "T412Audit" "T412Codec" "T412-1" "T412-2"))
+        (subword-anoms (h/detect-subword-inefficiencies task-ids))
+        (report (h/build-multidimensional-report base-matrix symbols actions))]
+    (assert (= (list-length token-anoms) 1) "1 long dashed symbol must be flagged as token penalty")
+    (assert (= (list-length saga-anoms) 1) "1 procSpawn lacking cleanup must be flagged as uncompensated saga")
+    (assert (= (list-length subword-anoms) 2) "2 numeric dash task IDs must be flagged as subword inefficiencies")
+    (assert (not (.-healthy report)) "Report with uncompensated saga must be unhealthy")
+    (assert (= (.-dashedCount report) 1) "Report must record 1 dashed symbol")
+    (assert (< (.-tokenScore report) 1.0) "Token score must reflect penalty")
+    true))
+
 (df run-tests [] -> Bool
   :d "Executes full codebase structural health test suite."
-  (let [(_t1 (test-detect-cycles-clean-dag))
-        (_t2 (test-detect-cycles-diamond-dag))
-        (_t3 (test-detect-self-cycle))
-        (_t4 (test-blast-radius-hotspot))
-        (_t5 (test-orphan-exports))
-        (_t6 (test-cyclomatic-hotspot))
-        (_t7 (test-build-health-matrix))]
+  (let [(_t1 (TestDetectCyclesCleanDag))
+        (_t2 (TestDetectCyclesDiamondDag))
+        (_t3 (TestDetectSelfCycle))
+        (_t4 (TestBlastRadiusHotspot))
+        (_t5 (TestOrphanExports))
+        (_t6 (TestCyclomaticHotspot))
+        (_t7 (TestBuildHealthMatrix))
+        (_t8 (TestMultidimensionalHealthMatrix))]
     true))

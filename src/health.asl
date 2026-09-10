@@ -2,8 +2,8 @@
   :d "Automated Codebase Structural Health Matrix & Invariant Anomaly Detection Engine"
   :x [HealthAnomalyKind
       anomaly-cycle anomaly-blast-radius anomaly-orphan-export anomaly-signature-mismatch anomaly-complexity-hotspot anomaly-layer-leakage
-      anomaly-broken-reference anomaly-dangling-pointer
-      HealthAnomaly HealthMatrix RefEdge
+      anomaly-broken-reference anomaly-dangling-pointer anomaly-token-penalty anomaly-uncompensated-saga
+      HealthAnomaly HealthMatrix RefEdge MultidimensionalHealthReport
       health-anomaly-kind-to-string
       detect-import-cycles
       detect-blast-radius-hotspots
@@ -18,6 +18,10 @@
       detect-cyclic-references
       audit-reference-integrity
       build-health-matrix
+      detect-token-penalties
+      detect-uncompensated-sagas
+      detect-subword-inefficiencies
+      build-multidimensional-report
       intel-health
       format-health-report]
   :i [(graph :a g)
@@ -31,7 +35,9 @@
   (:c anomaly-complexity-hotspot [] "Complexity hotspot: function exceeding complexity threshold")
   (:c anomaly-layer-leakage [] "Boundary violation: illegal cross-layer dependency from lower to higher layer")
   (:c anomaly-broken-reference [] "Broken reference: reference targets nonexistent symbol, task, ADR or anchor")
-  (:c anomaly-dangling-pointer [] "Dangling pointer: perceptual pointer or memory chunk targets missing buffer"))
+  (:c anomaly-dangling-pointer [] "Dangling pointer: perceptual pointer or memory chunk targets missing buffer")
+  (:c anomaly-token-penalty [] "Token penalty: dashed identifier exceeding token baseline")
+  (:c anomaly-uncompensated-saga [] "Uncompensated saga: side-effect mutation without cleanup handler"))
 
 (dfs HealthAnomaly
   (:f kind HealthAnomalyKind "Category of detected health anomaly")
@@ -72,7 +78,9 @@
     ((anomaly-complexity-hotspot) "complexity-hotspot")
     ((anomaly-layer-leakage) "layer-leakage")
     ((anomaly-broken-reference) "broken-reference")
-    ((anomaly-dangling-pointer) "dangling-pointer")))
+    ((anomaly-dangling-pointer) "dangling-pointer")
+    ((anomaly-token-penalty) "token-penalty")
+    ((anomaly-uncompensated-saga) "uncompensated-saga")))
 
 (df find-node-by-key [(nodes (List g/GraphNode)) (key Str)] -> (Option g/GraphNode)
   :d "Finds a node in nodes list by matching id or name against key."
@@ -531,3 +539,75 @@
                                    (.-message a)))
                              (.-anomalies matrix)))]
         (str header "\nDetected Anomalies:\n" (string-join "\n" anom-lines))))))
+
+(dfs MultidimensionalHealthReport
+  (:f scope Str "Workspace or module scope evaluated")
+  (:f tokenScore F64 "Token efficiency ratio")
+  (:f dashedCount I64 "Number of dashed symbols")
+  (:f anomalies (List HealthAnomaly) "List of all anomalies across 5 dimensions")
+  (:f healthy Bool "True iff zero blocker or error anomalies exist"))
+
+(df detect-token-penalties [(symbols (List Str))] -> (List HealthAnomaly)
+  :d "Audits list of symbols and flags dashed identifiers as token penalty anomalies"
+  (fold (fn [(acc (List HealthAnomaly)) (sym Str)] -> (List HealthAnomaly)
+          (if (and (string-contains? sym "-") (> (string-length sym) 15))
+              (list-append acc (list (HealthAnomaly
+                                       :kind (anomaly-token-penalty)
+                                       :symbol sym
+                                       :location "grammar"
+                                       :message "TOKEN_PENALTY: Symbol should be migrated to camelCase"
+                                       :severity "warning"
+                                       :metric 1)))
+              acc))
+        (list)
+        symbols))
+
+(df detect-uncompensated-sagas [(actions (List Str))] -> (List HealthAnomaly)
+  :d "Flags mutations with external side effects lacking explicit rollback handlers"
+  (fold (fn [(acc (List HealthAnomaly)) (act Str)] -> (List HealthAnomaly)
+          (if (and (string-contains? act "procSpawn") (not (string-contains? act "cleanup")))
+              (list-append acc (list (HealthAnomaly
+                                       :kind (anomaly-uncompensated-saga)
+                                       :symbol act
+                                       :location "runtime"
+                                       :message "UNCOMPENSATED_SAGA: Mutation missing registered cleanup handler"
+                                       :severity "error"
+                                       :metric 1)))
+              acc))
+        (list)
+        actions))
+
+(df build-multidimensional-report [(matrix HealthMatrix) (symbols (List Str)) (actions (List Str))] -> MultidimensionalHealthReport
+  :d "Builds comprehensive 5D codebase health report combining structural, token, and saga telemetry"
+  (let [(token-anoms (detect-token-penalties symbols))
+        (saga-anoms (detect-uncompensated-sagas actions))
+        (all-anoms (list-append (.-anomalies matrix) (list-append token-anoms saga-anoms)))
+        (dashed-n (list-length token-anoms))
+        (score (if (= (list-length symbols) 0) 1.0 (- 1.0 (/ (* 1.0 dashed-n) (* 1.0 (list-length symbols))))))
+        (healthy (and (.-healthy matrix) (list-empty? saga-anoms)))]
+    (MultidimensionalHealthReport
+      :scope (.-scope matrix)
+      :tokenScore score
+      :dashedCount dashed-n
+      :anomalies all-anoms
+      :healthy healthy)))
+
+(df detect-subword-inefficiencies [(identifiers (List Str))] -> (List HealthAnomaly)
+  :d "Audits task identifiers and flags uninformative numeric dash suffixes that violate Pillar V"
+  (fold (fn [(acc (List HealthAnomaly)) (id Str)] -> (List HealthAnomaly)
+          (if (and (string-contains? id "-")
+                   (or (string-ends-with? id "-1")
+                       (or (string-ends-with? id "-2")
+                           (or (string-ends-with? id "-3")
+                               (or (string-ends-with? id "-4")
+                                   (string-ends-with? id "-5"))))))
+              (list-append acc (list (HealthAnomaly
+                                       :kind (anomaly-token-penalty)
+                                       :symbol id
+                                       :location "tasks"
+                                       :message "SUBWORD_PUNCTUATION_INEFFICIENCY: Use semantic subword instead of numeric dash"
+                                       :severity "warning"
+                                       :metric 1)))
+              acc))
+        (list)
+        identifiers))
