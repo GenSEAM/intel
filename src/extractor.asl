@@ -6,41 +6,37 @@
       kind-to-string string-to-kind
       parse-asl-tokens extract-asl-symbols extract-generic-symbols filter-exported])
 
-(ty SymbolKind
-  (enum
-    (sym-fn)
-    (sym-type)
-    (sym-record)
-    (sym-enum)
-    (sym-method)
-    (sym-class)
-    (sym-interface)
-    (sym-variable)))
+(dfe SymbolKind
+  (:c sym-fn [] "Function symbol")
+  (:c sym-type [] "Type symbol")
+  (:c sym-record [] "Record symbol")
+  (:c sym-enum [] "Enum symbol")
+  (:c sym-method [] "Method symbol")
+  (:c sym-class [] "Class symbol")
+  (:c sym-interface [] "Interface symbol")
+  (:c sym-variable [] "Variable symbol"))
 
-(ty SymbolDef
-  (record
-    (:name Str)
-    (:kind SymbolKind)
-    (:file Str)
-    (:start-line I64)
-    (:end-line I64)
-    (:signature Str)
-    (:exported Bool)
-    (:doc Str)))
+(dfs SymbolDef
+  (:f name Str "Symbol identifier name")
+  (:f kind SymbolKind "Symbol category")
+  (:f file Str "File path")
+  (:f start-line I64 "Start line")
+  (:f end-line I64 "End line")
+  (:f signature Str "Type signature")
+  (:f exported Bool "True if exported")
+  (:f doc Str "Docstring"))
 
-(ty SymbolRef
-  (record
-    (:name Str)
-    (:caller Str)
-    (:file Str)
-    (:line I64)))
+(dfs SymbolRef
+  (:f name Str "Referenced symbol name")
+  (:f caller Str "Calling symbol")
+  (:f file Str "Referenced file")
+  (:f line I64 "Reference line"))
 
-(ty FileSymbols
-  (record
-    (:file Str)
-    (:language Str)
-    (:symbols (List SymbolDef))
-    (:refs (List SymbolRef))))
+(dfs FileSymbols
+  (:f file Str "File path")
+  (:f language Str "Language identifier")
+  (:f symbols (List SymbolDef) "Extracted symbol definitions")
+  (:f refs (List SymbolRef) "Extracted symbol references"))
 
 (df kind-to-string [(k SymbolKind)] -> Str
   (:d "Convert SymbolKind to standard string representation")
@@ -76,7 +72,7 @@
   (:d "Extract symbols and call references from AgentScript source code")
   (let [(lines (string-split source "\n"))
         (num-lines (list-length lines))]
-    (:FileSymbols
+    (FileSymbols
       :file file
       :language "asl"
       :symbols (list)
@@ -87,7 +83,7 @@
                              (defs (List SymbolDef))
                              (refs (List SymbolRef))] -> FileSymbols
   (:d "Construct typed FileSymbols record from language extractor bridge")
-  (:FileSymbols
+  (FileSymbols
     :file file
     :language lang
     :symbols defs

@@ -522,7 +522,7 @@
   :d "Formats HealthMatrix into human-readable diagnostic report."
   (let [(status-str (if (.-healthy matrix) "HEALTHY (CLEAN)" "UNHEALTHY (ANOMALIES DETECTED)"))
         (cycle-str (if (.-has-cycles matrix) "BLOCKED (CYCLES DETECTED)" "NONE (CLEAN)"))
-        (header (str "=== CODEBASE STRUCTURAL HEALTH MATRIX ===\n"
+        (header (str "=== Structural Health Matrix ===\n"
                      "=== CODEBASE STRUCTURAL HEALTH REPORT ===\n"
                      "Scope:        " (.-scope matrix) "\n"
                      "Status:       " status-str "\n"
@@ -565,7 +565,7 @@
 (df detect-uncompensated-sagas [(actions (List Str))] -> (List HealthAnomaly)
   :d "Flags mutations with external side effects lacking explicit rollback handlers"
   (fold (fn [(acc (List HealthAnomaly)) (act Str)] -> (List HealthAnomaly)
-          (if (and (string-contains? act "procSpawn") (not (string-contains? act "cleanup")))
+          (if (and (string-contains? act "procSpawn") (or (string-contains? act "no-cleanup") (not (string-contains? act ":cleanup"))))
               (list-append acc (list (HealthAnomaly
                                        :kind (anomaly-uncompensated-saga)
                                        :symbol act

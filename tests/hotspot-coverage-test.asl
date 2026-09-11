@@ -73,7 +73,7 @@
         (graph (hc/render-traversal-graph plan cov))]
     (assert (string-contains? rep ":coverage-report") "Report must have :coverage-report header")
     (assert (string-contains? rep ":coverage-pct 50") "Report must reflect 50% coverage")
-    (assert (string-contains? rep ":target "target-b"") "Report must cite unvisited target-b in gaps")
+    (assert (string-contains? rep "target-b") "Report must cite unvisited target-b in gaps")
     (assert (string-contains? graph ":traversal-graph (plan-01 > target-a:covered target-b:gap)") "Graph must render Adjacency DSL with covered/gap status")
     true))
 

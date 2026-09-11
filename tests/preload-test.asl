@@ -17,13 +17,13 @@
 
 (df build-test-graph [] -> g/SymbolGraph
   :d "Constructs an in-memory SymbolGraph fixture for testing"
-  (let [(n0 (:GraphNode :id "app/main" :name "main" :kind "function" :file "src/main.asl" :start-line 1 :end-line 20 :signature "(df main [] -> I64)" :exported true))
-        (n1 (:GraphNode :id "app/caller" :name "caller" :kind "function" :file "src/caller.asl" :start-line 1 :end-line 15 :signature "(df caller [] -> I64)" :exported true))
-        (n2 (:GraphNode :id "app/callee" :name "callee" :kind "function" :file "src/callee.asl" :start-line 1 :end-line 10 :signature "(df callee [] -> I64)" :exported true))
-        (n3 (:GraphNode :id "app/transitive" :name "transitive" :kind "function" :file "src/trans.asl" :start-line 1 :end-line 8 :signature "(df transitive [] -> I64)" :exported false))
-        (e1 (:GraphEdge :src "app/caller" :dst "app/main" :kind (g/edge-calls) :file "src/caller.asl" :line 5))
-        (e2 (:GraphEdge :src "app/main" :dst "app/callee" :kind (g/edge-calls) :file "src/main.asl" :line 10))
-        (e3 (:GraphEdge :src "app/callee" :dst "app/transitive" :kind (g/edge-calls) :file "src/callee.asl" :line 8))
+  (let [(n0 (g/GraphNode :id "app/main" :name "main" :kind "function" :file "src/main.asl" :start-line 1 :end-line 20 :signature "(df main [] -> I64)" :exported true))
+        (n1 (g/GraphNode :id "app/caller" :name "caller" :kind "function" :file "src/caller.asl" :start-line 1 :end-line 15 :signature "(df caller [] -> I64)" :exported true))
+        (n2 (g/GraphNode :id "app/callee" :name "callee" :kind "function" :file "src/callee.asl" :start-line 1 :end-line 10 :signature "(df callee [] -> I64)" :exported true))
+        (n3 (g/GraphNode :id "app/transitive" :name "transitive" :kind "function" :file "src/trans.asl" :start-line 1 :end-line 8 :signature "(df transitive [] -> I64)" :exported false))
+        (e1 (g/GraphEdge :src "app/caller" :dst "app/main" :kind (g/edge-calls) :file "src/caller.asl" :line 5))
+        (e2 (g/GraphEdge :src "app/main" :dst "app/callee" :kind (g/edge-calls) :file "src/main.asl" :line 10))
+        (e3 (g/GraphEdge :src "app/callee" :dst "app/transitive" :kind (g/edge-calls) :file "src/callee.asl" :line 8))
         (g0 (g/graph-create))
         (g1 (g/graph-add-node g0 n0))
         (g2 (g/graph-add-node g1 n1))

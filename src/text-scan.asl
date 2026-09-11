@@ -40,10 +40,10 @@
   :d "Extracts the header text after leading hash symbols."
   (let [(trimmed (string-trim line))]
     (cond
-      ((= lvl 1) (string-trim (string-slice trimmed 2 (string-length trimmed))))
-      ((= lvl 2) (string-trim (string-slice trimmed 3 (string-length trimmed))))
-      ((= lvl 3) (string-trim (string-slice trimmed 4 (string-length trimmed))))
-      ((= lvl 4) (string-trim (string-slice trimmed 5 (string-length trimmed))))
+      ((= lvl 1) (string-trim (option-or (string-slice trimmed 2 (string-length trimmed)) "")))
+      ((= lvl 2) (string-trim (option-or (string-slice trimmed 3 (string-length trimmed)) "")))
+      ((= lvl 3) (string-trim (option-or (string-slice trimmed 4 (string-length trimmed)) "")))
+      ((= lvl 4) (string-trim (option-or (string-slice trimmed 5 (string-length trimmed)) "")))
       (:else trimmed))))
 
 (df scan-doc-outline [(content Str) (file-path Str)] -> TextDocOutline

@@ -5,28 +5,25 @@
       ImpactItem QueryResult
       format-query-kind filter-by-depth make-query-result])
 
-(ty QueryKind
-  (enum
-    (q-search)
-    (q-callers)
-    (q-callees)
-    (q-impact)
-    (q-affected)
-    (q-context)))
+(dfe QueryKind
+  (:c q-search [] "Search query")
+  (:c q-callers [] "Callers query")
+  (:c q-callees [] "Callees query")
+  (:c q-impact [] "Impact query")
+  (:c q-affected [] "Affected query")
+  (:c q-context [] "Context query"))
 
-(ty ImpactItem
-  (record
-    (:symbol-id Str)
-    (:name Str)
-    (:file Str)
-    (:depth I64)))
+(dfs ImpactItem
+  (:f symbol-id Str "Symbol identifier")
+  (:f name Str "Symbol name")
+  (:f file Str "File path")
+  (:f depth I64 "Transitive reachability depth"))
 
-(ty QueryResult
-  (record
-    (:query Str)
-    (:kind QueryKind)
-    (:items (List ImpactItem))
-    (:total I64)))
+(dfs QueryResult
+  (:f query Str "Query string")
+  (:f kind QueryKind "Query category")
+  (:f items (List ImpactItem) "Impact items list")
+  (:f total I64 "Total matching items count"))
 
 (df format-query-kind [(k QueryKind)] -> Str
   (:d "Format QueryKind to string representation")
@@ -44,7 +41,7 @@
 
 (df make-query-result [(q Str) (k QueryKind) (items (List ImpactItem))] -> QueryResult
   (:d "Create a QueryResult record")
-  (:QueryResult
+  (QueryResult
     :query q
     :kind k
     :items items

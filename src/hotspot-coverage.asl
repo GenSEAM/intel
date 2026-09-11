@@ -216,7 +216,7 @@
 
 (df format-gap-item [(g CoverageGap)] -> Str
   :d "Formats a single CoverageGap S-expression item."
-  (str "(:gap :target "" (.-target-id g) "" :file "" (.-file g) "" :severity "" (.-severity g) "" :reason "" (.-reason g) "")"))
+  (str "(:gap :target " (.-target-id g) " :file " (.-file g) " :severity " (.-severity g) " :reason " (.-reason g) ")"))
 
 (df format-coverage-report [(comp CoverageComparison)] -> Str
   :d "Formats a structured S-expression coverage report."
@@ -226,7 +226,7 @@
                                      (.-gaps comp))
                                " "))]
     (str "(:coverage-report"
-         " :plan-id "" (.-plan-id comp) """
+         " :plan-id " (.-plan-id comp)
          " :planned " (string-from-int64 (.-total-planned comp))
          " :visited " (string-from-int64 (.-total-visited comp))
          " :covered " (string-from-int64 (.-covered-count comp))
