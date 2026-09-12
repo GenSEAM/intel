@@ -160,15 +160,14 @@
 
 (df run-tests [] -> Bool
   :d "Executes complete test suite for scoped graph-horizon preloading"
-  (let [(_t1 (TestStubTokenEstimation))
-        (_t2 (TestPreloadTierConversion))
-        (_t3 (TestHorizonBudgetEnforcement))
-        (_t4 (TestHorizonAddStubBudget))
-        (_t5 (TestHorizonZeroBudget))
-        (_t6 (TestIntelPreloadGraphMultiTier))
-        (_t7 (TestIntelPreloadDepthScoping))
-        (_t8 (TestIntelPreloadEmptyTarget))
-        (_t9 (TestIntelPreloadMissingTarget))
-        (_t10 (TestIntelPreloadZeroDepth))
-        (_t11 (TestFormatPreloadContext))]
-    true))
+  (let [(t1 (TestStubTokenEstimation))
+        (t2 (TestPreloadTierConversion))
+        (t3 (TestHorizonBudgetEnforcement))
+        (t4 (TestHorizonAddStubBudget))
+        (t5 (TestHorizonZeroBudget))
+        (t6 (TestIntelPreloadGraphMultiTier))
+        (t7 (TestIntelPreloadDepthScoping))
+        (t8 (TestIntelPreloadEmptyTarget))
+        (t9 (TestIntelPreloadMissingTarget))
+        (t10 (TestIntelPreloadZeroDepth))
+        (t11 (TestFormatPreloadContext))] (and t1 (and t2 (and t3 (and t4 (and t5 (and t6 (and t7 (and t8 (and t9 (and t10 t11))))))))))))

@@ -92,9 +92,9 @@
 
 (df test-boundary-trap-agent-id-leakage [] -> Bool
   :d "Verifies that Layer 0 referencing agent ID triggers anomaly-layer-leakage"
-  (let [(n-agent (make-test-node "@scout" "@scout" "asl/packages/asl-parser/src/parser.asl" "[]"))
+  (let [(n-agent (make-test-node ":agent:scout" ":agent:scout" "asl/packages/asl-parser/src/parser.asl" "[]"))
         (n-caller (make-test-node "parser-scan" "parser-scan" "asl/packages/asl-parser/src/parser.asl" "[]"))
-        (e-leak (make-test-edge "parser-scan" "@scout" "asl/packages/asl-parser/src/parser.asl"))
+        (e-leak (make-test-edge "parser-scan" ":agent:scout" "asl/packages/asl-parser/src/parser.asl"))
         (graph (g/SymbolGraph :nodes (list n-caller n-agent) :edges (list e-leak)))
         (anoms (h/detect-layer-leakage graph))]
     (assert (not (list-empty? anoms)) "Agent ID reference in Layer 0 must trigger layer leakage anomaly")

@@ -205,12 +205,11 @@
 
 (df run-tests [] -> Bool
   :d "Executes full codebase structural health test suite."
-  (let [(_t1 (TestDetectCyclesCleanDag))
-        (_t2 (TestDetectCyclesDiamondDag))
-        (_t3 (TestDetectSelfCycle))
-        (_t4 (TestBlastRadiusHotspot))
-        (_t5 (TestOrphanExports))
-        (_t6 (TestCyclomaticHotspot))
-        (_t7 (TestBuildHealthMatrix))
-        (_t8 (TestMultidimensionalHealthMatrix))]
-    true))
+  (let [(t1 (TestDetectCyclesCleanDag))
+        (t2 (TestDetectCyclesDiamondDag))
+        (t3 (TestDetectSelfCycle))
+        (t4 (TestBlastRadiusHotspot))
+        (t5 (TestOrphanExports))
+        (t6 (TestCyclomaticHotspot))
+        (t7 (TestBuildHealthMatrix))
+        (t8 (TestMultidimensionalHealthMatrix))] (and t1 (and t2 (and t3 (and t4 (and t5 (and t6 (and t7 t8)))))))))

@@ -68,9 +68,8 @@
 
 (df run-tests [] -> Bool
   :d "Runs all text scan tests"
-  (let [(_t1 (test-scan-doc-outline))
-        (_t2 (test-extract-doc-section))
-        (_t3 (test-search-doc-snippets))
-        (_t4 (test-format-doc-outline-asn))
-        (_t5 (test-format-section-asn))]
-    true))
+  (let [(t1 (test-scan-doc-outline))
+        (t2 (test-extract-doc-section))
+        (t3 (test-search-doc-snippets))
+        (t4 (test-format-doc-outline-asn))
+        (t5 (test-format-section-asn))] (and t1 (and t2 (and t3 (and t4 t5))))))

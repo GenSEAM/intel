@@ -21,6 +21,5 @@
 
 (df run-tests [] -> Bool
   :d "Runs all intel unit tests."
-  (let [(_t1 (test-intel-version))
-        (_t2 (test-intel-banner))]
-    true))
+  (let [(t1 (test-intel-version))
+        (t2 (test-intel-banner))] (and t1 t2)))

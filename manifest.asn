@@ -3,4 +3,18 @@
  :entry "src/intel.asl"
  :description "Native code intelligence graph, impact analysis, and ASN S-expression navigator"
  :asl-first true
- :dependencies [])
+ :modules [
+   "asl-intel/codec"
+   "asl-intel/diagram"
+   "asl-intel/extractor"
+   "asl-intel/graph"
+   "asl-intel/health"
+   "asl-intel/hotspot-coverage"
+   "asl-intel/intel"
+   "asl-intel/placement"
+   "asl-intel/preload"
+   "asl-intel/query"
+   "asl-intel/text-scan"
+   "asl-intel/xref"
+ ]
+ :dependencies ["asl-mem"])

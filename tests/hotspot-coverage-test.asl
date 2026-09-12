@@ -79,8 +79,7 @@
 
 (df run-tests [] -> Bool
   :d "Runs all hotspot coverage test suites."
-  (let [(_t1 (test-plan-creation))
-        (_t2 (test-coverage-recording))
-        (_t3 (test-gap-analysis-and-comparison))
-        (_t4 (test-report-formatting))]
-    true))
+  (let [(t1 (test-plan-creation))
+        (t2 (test-coverage-recording))
+        (t3 (test-gap-analysis-and-comparison))
+        (t4 (test-report-formatting))] (and t1 (and t2 (and t3 t4)))))

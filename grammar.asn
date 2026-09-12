@@ -107,7 +107,7 @@
           :rationale "Renders preloaded horizon into dense ASN context string")
 
     ;; Preload Test Symbols
-    (:sym :name "test-stub-token-estimation" :kind :fn :tokens 4
+    (:sym :name "TestStubTokenEstimation" :kind :fn :tokens 4
           :rationale "Tests token estimation on symbol stubs")
     (:sym :name "TestPreloadTierConversion" :kind :fn :tokens 4
           :rationale "Tests conversion of preload tier enum to string")
@@ -276,8 +276,6 @@
     ;; Phase 333 Universal Cross-Reference and Dependency Graph Symbols
     (:sym :name "RefTarget" :kind :type :tokens 1)
     (:sym :name "CrossReference" :kind :type :tokens 1)
-    (:sym :name "XRefEdge" :kind :type :tokens 1)
-    (:sym :name "XRefGraph" :kind :type :tokens 1)
     (:sym :name "RefEdge" :kind :type :tokens 1)
     (:sym :name "anomaly-broken-reference" :kind :val :tokens 3
           :rationale "Anomaly variant flagging broken cross-domain entity references")
@@ -297,21 +295,6 @@
           :rationale "Serializes RefTarget into formatted string representation")
     (:sym :name "extract-docstring-refs" :kind :fn :tokens 3
           :rationale "Scans ASL docstring for ref: URI annotations without inline comments")
-    (:sym :name "make-xref-graph" :kind :fn :tokens 3
-          :rationale "Constructs empty in-memory universal cross-reference bipartite graph")
-    (:sym :name "list-add-unique" :kind :fn :tokens 3
-          :rationale "Appends item to list if not present to preserve element uniqueness")
-    (:sym :name "xref-has-node?" :kind :fn :tokens 3
-          :rationale "Tests existence of entity URI node in cross-reference graph")
-    (:sym :name "xref-forward-edges" :kind :fn :tokens 3
-          :rationale "Queries direct outgoing target entity URIs from source node")
-    (:sym :name "xref-backward-edges" :kind :fn :tokens 3
-          :rationale "Queries direct incoming source entity URIs pointing to target node")
-    (:sym :name "xref-add-edge" :kind :fn :tokens 3
-          :rationale "Adds directed relationship edge between entities with bipartite indexing")
-    (:sym :name "find-dependents" :kind :fn :tokens 2)
-    (:sym :name "find-prerequisites" :kind :fn :tokens 2)
-    (:sym :name "find-provenance" :kind :fn :tokens 2)
     (:sym :name "get-xref-targets" :kind :fn :tokens 3
           :rationale "Extracts outgoing target nodes from cross-reference edge list")
     (:sym :name "dfs-xref-cycle" :kind :fn :tokens 3

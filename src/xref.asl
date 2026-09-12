@@ -8,7 +8,8 @@
       format-ref-uri
       ref-target-eq?
       ref-target-to-string
-      extract-docstring-refs]
+      extract-docstring-refs
+      is-supported-language?]
   :i [])
 
 (dfs RefTarget
@@ -23,13 +24,11 @@
   (:f context Str "Context or docstring excerpt containing the reference"))
 
 (df strip-ref-prefix [(s Str)] -> Str
-  :d "Strips leading ref: or @ref: prefix if present"
+  :d "Strips leading ref: prefix if present"
   (let [(trimmed (string-trim s))]
     (if (string-starts-with? trimmed "ref:")
         (string-trim (option-or (string-slice trimmed 4 (string-length trimmed)) ""))
-        (if (string-starts-with? trimmed "@ref:")
-            (string-trim (option-or (string-slice trimmed 5 (string-length trimmed)) ""))
-            trimmed))))
+        trimmed)))
 
 (df clean-ref-token [(tok Str)] -> Str
   :d "Strips punctuation and delimiters from an extracted reference token"
@@ -67,8 +66,8 @@
          (RefTarget :kind "chunk" :id id :line 0)))
       ((string-starts-with? clean "file:")
        (let [(rest (string-trim (option-or (string-slice clean 5 (string-length clean)) "")))]
-         (if (string-contains? rest "#L")
-             (let [(parts (string-split rest "#L"))
+         (if (string-contains? rest ":L")
+             (let [(parts (string-split rest ":L"))
                    (path (option-or (list-get parts 0) rest))
                    (l-str (option-or (list-get parts 1) "0"))
                    (l-num (option-or (string-to-int64 l-str) 0))]
@@ -90,7 +89,7 @@
     (cond
       ((= k "file")
        (if (> l 0)
-           (str "file:" id "#L" (string-from-int64 l))
+           (str "file:" id ":L" (string-from-int64 l))
            (str "file:" id)))
       (:else
        (str k ":" id)))))
@@ -106,13 +105,12 @@
             (= (.-line a) (.-line b)))))
 
 (df extract-docstring-refs [(source Str) (docstring Str)] -> (List CrossReference)
-  :d "Scans an ASL docstring for ref: or @ref: URI annotations and parses them into CrossReference records"
+  :d "Scans an ASL docstring for ref: URI annotations and parses them into CrossReference records"
   (let [(s1 (string-replace docstring "\n" " "))
         (s2 (string-replace s1 "\t" " "))
         (tokens (string-split s2 " "))
         (ref-tokens (filter (fn [(tok Str)] -> Bool
-                              (or (string-contains? tok "ref:")
-                                  (string-contains? tok "@ref:")))
+                              (string-contains? tok "ref:"))
                             tokens))]
     (map (fn [(raw-tok Str)] -> CrossReference
            (let [(cleaned (clean-ref-token raw-tok))
@@ -123,3 +121,18 @@
                :raw cleaned
                :context docstring)))
          ref-tokens)))
+
+(df is-supported-language? [(ext Str)] -> Bool
+  (let [(clean (if (string-starts-with? ext ".") (option-or (string-slice ext 1 (string-length ext)) "") ext))]
+    (or (= clean "asl")
+        (or (= clean "asn")
+            (or (= clean "ts")
+                (or (= clean "tsx")
+                    (or (= clean "js")
+                        (or (= clean "jsx")
+                            (or (= clean "py")
+                                (or (= clean "go")
+                                    (or (= clean "rs")
+                                        (or (= clean "php")
+                                            (or (= clean "md")
+                                                (= clean "c"))))))))))))))
