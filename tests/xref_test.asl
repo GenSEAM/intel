@@ -10,7 +10,7 @@
       run-tests]
   :i [(xref :a xr)
       (health :a h)
-      (mem/src/xref :a mxr)])
+      (../../mem/src/xref :a mxr)])
 
 (df test-parse-ref-uri-task [] -> Bool
   :d "Tests parsing of task shortcode reference URIs"
